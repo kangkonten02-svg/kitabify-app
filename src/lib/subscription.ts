@@ -23,10 +23,24 @@ export interface ActiveSubscription {
 }
 
 export function computeActive(sub: Subscription | null): ActiveSubscription {
+  const now = Date.now();
+  // Local VIP bonus from Daily Login milestones (client-side only, no DB changes)
+  let localBonusExpiry: Date | null = null;
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem("kitabify_vip_bonus") : null;
+    if (raw) {
+      const d = new Date(raw);
+      if (d.getTime() > now) localBonusExpiry = d;
+    }
+  } catch {}
+
   if (!sub) {
+    if (localBonusExpiry) {
+      const days = Math.ceil((localBonusExpiry.getTime() - now) / 86400000);
+      return { effectiveTier: "VIP", source: "trial", expiresAt: localBonusExpiry, daysLeft: days, raw: null };
+    }
     return { effectiveTier: "FREE", source: "free", expiresAt: null, daysLeft: null, raw: null };
   }
-  const now = Date.now();
   const paid = sub.paid_expires_at ? new Date(sub.paid_expires_at) : null;
   const trial = sub.trial_expires_at ? new Date(sub.trial_expires_at) : null;
 
@@ -43,6 +57,10 @@ export function computeActive(sub: Subscription | null): ActiveSubscription {
       daysLeft: days,
       raw: sub,
     };
+  }
+  if (localBonusExpiry) {
+    const days = Math.ceil((localBonusExpiry.getTime() - now) / 86400000);
+    return { effectiveTier: "VIP", source: "trial", expiresAt: localBonusExpiry, daysLeft: days, raw: sub };
   }
   return { effectiveTier: "FREE", source: "free", expiresAt: null, daysLeft: 0, raw: sub };
 }

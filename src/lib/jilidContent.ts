@@ -191,12 +191,17 @@ export const JILID1_CONTENT: RichBab[] = [
       {
         type: "text",
         title: "Pembuat",
-        content: "KH Luthfi Muhammad Nurzen",
+        content: "Aa Ust Muhammad Nurzen",
       },
       {
         type: "text",
-        title: "Penulis kitab Amtsilati",
+        title: "Pengarang Kitab Amtsilati",
         content: "KH Taufiqul Hakim",
+      },
+      {
+        type: "text",
+        title: "Pengajar Kitab Amtsilati",
+        content: "KH Aden beserta jajaran nya pada Pondok Pesantren Al Istiqomah / Ponpes Isteq Amtsilati Ciheulang Cianjur Jawa Barat",
       },
       {
         type: "text",

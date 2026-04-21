@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUser, saveUser, logout, getLevelTitle, getExpToNextLevel, ALL_BADGES } from "@/lib/store";
-import { User, Award, Zap, LogOut, ChevronRight, X, Moon, Sun, ExternalLink, Settings, Phone, Heart, Camera, Shield } from "lucide-react";
+import {
+  User as UserIcon, Award, Zap, LogOut, ChevronRight, X, Moon, Sun,
+  ExternalLink, Settings, Phone, Heart, Camera,
+} from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import supportQr from "@/assets/support-qr.jpg";
 import {
@@ -13,21 +16,19 @@ interface LainnyaPageProps {
   onLogout: () => void;
 }
 
+type Sheet = null | "profile" | "settings" | "contact" | "support" | "badges";
+
 const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
   const [user, setUser] = useState(getUser());
-  const [showProfile, setShowProfile] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showContact, setShowContact] = useState(false);
-  const [showSupport, setShowSupport] = useState(false);
-  const [showBadges, setShowBadges] = useState(false);
+  const [sheet, setSheet] = useState<Sheet>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem("kitabify_theme") !== "light";
-  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDark, setIsDark] = useState(
+    () => localStorage.getItem("kitabify_theme") !== "light",
+  );
 
   useEffect(() => {
     const root = document.documentElement;
-    // Add transition class for smooth theme switch
     root.classList.add("theme-transition");
     if (isDark) {
       root.classList.remove("light");
@@ -36,9 +37,8 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
       root.classList.add("light");
       localStorage.setItem("kitabify_theme", "light");
     }
-    // Remove transition class after animation completes
-    const timer = setTimeout(() => root.classList.remove("theme-transition"), 350);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => root.classList.remove("theme-transition"), 350);
+    return () => clearTimeout(t);
   }, [isDark]);
 
   if (!user) return null;
@@ -52,173 +52,347 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
     onLogout();
   };
 
-  const sectionTitle = (icon: string, title: string) => (
-    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 px-1">
-      {icon} {title}
-    </h2>
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const photo = reader.result as string;
+      const updated = { ...user, photo };
+      saveUser(updated);
+      setUser(updated);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const MenuItem = ({
+    icon, title, subtitle, onClick, delay = 0,
+  }: { icon: React.ReactNode; title: string; subtitle: string; onClick: () => void; delay?: number }) => (
+    <motion.button
+      onClick={onClick}
+      className="glass-card p-4 w-full text-left rounded-2xl flex items-center gap-4 active:scale-[0.98] transition-transform"
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
+    >
+      <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+      </div>
+      <ChevronRight className="text-muted-foreground" size={18} />
+    </motion.button>
+  );
+
+  const Avatar = ({ size = 56 }: { size?: number }) => (
+    <div
+      className="rounded-2xl bg-primary/20 flex items-center justify-center overflow-hidden shrink-0"
+      style={{ width: size, height: size }}
+    >
+      {user.photo ? (
+        <img src={user.photo} alt={user.name} className="w-full h-full object-cover" />
+      ) : (
+        <UserIcon className="text-primary" size={size * 0.5} />
+      )}
+    </div>
+  );
+
+  const SheetModal = ({ open, onClose, title, children }: {
+    open: boolean; onClose: () => void; title: string; children: React.ReactNode;
+  }) => (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-background/60 backdrop-blur-sm"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="w-full max-w-lg bg-card rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto"
+            initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-foreground">{title}</h3>
+              <button onClick={onClose} aria-label="Tutup">
+                <X className="text-muted-foreground" size={20} />
+              </button>
+            </div>
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto space-y-5">
+    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto space-y-4">
       <h1 className="text-2xl font-extrabold text-foreground mb-2">⚙️ Lainnya</h1>
 
-      {/* Profile Card */}
-      {sectionTitle("👤", "Profil")}
-      <motion.div className="glass-card p-5 rounded-2xl" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center">
-            <User className="text-primary" size={28} />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-lg font-bold text-foreground truncate">{user.name}</h3>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {[
-            { label: "Kota", value: user.city || "-" },
-            { label: "Instansi", value: user.institution || "-" },
-          ].map((item) => (
-            <div key={item.label} className="bg-muted/50 rounded-xl p-3">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="text-sm font-semibold text-foreground">{item.value}</p>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Level & EXP */}
-      <motion.button
-        onClick={() => setShowExpHistory(true)}
-        className="glass-card p-5 w-full text-left rounded-2xl active:scale-[0.98] transition-transform"
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Zap className="text-gold" size={20} />
-            <div>
-              <p className="text-sm font-bold text-foreground">Level {user.level} — {getLevelTitle(user.level)}</p>
-              <p className="text-xs text-muted-foreground">{user.exp} total EXP</p>
-            </div>
-          </div>
-          <ChevronRight className="text-muted-foreground" size={18} />
-        </div>
-        <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
-          <div className="h-full progress-bar-fill transition-all" style={{ width: `${(current / needed) * 100}%` }} />
-        </div>
-      </motion.button>
-
-      {/* Achievements */}
-      <motion.button
-        onClick={() => setShowBadges(true)}
-        className="glass-card p-5 w-full text-left rounded-2xl active:scale-[0.98] transition-transform"
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Award className="text-gold" size={20} />
-            <div>
-              <p className="text-sm font-bold text-foreground">Achievement</p>
-              <p className="text-xs text-muted-foreground">{earnedBadges.length}/{ALL_BADGES.length} badge diraih</p>
-            </div>
-          </div>
-          <ChevronRight className="text-muted-foreground" size={18} />
-        </div>
-        <div className="flex gap-2 mt-3 flex-wrap">
-          {earnedBadges.map((b) => (
-            <span key={b.id} className="text-2xl">{b.icon}</span>
-          ))}
-          {earnedBadges.length === 0 && <span className="text-sm text-muted-foreground italic">Belum ada badge</span>}
-        </div>
-      </motion.button>
-
-      {/* Divider */}
-      <div className="border-t border-border" />
-
-      {/* Pengaturan */}
-      {sectionTitle("⚙️", "Pengaturan")}
+      {/* Summary card */}
       <motion.div
-        className="glass-card p-5 rounded-2xl"
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        className="glass-card p-5 rounded-2xl flex items-center gap-4"
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {isDark ? <Moon className="text-primary" size={20} /> : <Sun className="text-primary" size={20} />}
-            <div>
-              <p className="text-sm font-bold text-foreground">{isDark ? "Mode Gelap" : "Mode Terang"}</p>
-              <p className="text-xs text-muted-foreground">Ubah tampilan aplikasi</p>
-            </div>
-          </div>
-          <Switch checked={isDark} onCheckedChange={setIsDark} />
+        <Avatar size={56} />
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold text-foreground truncate">{user.name}</h3>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+          <p className="text-xs text-primary mt-0.5 font-semibold">
+            Level {user.level} · {getLevelTitle(user.level)}
+          </p>
         </div>
       </motion.div>
 
-      {/* Divider */}
-      <div className="border-t border-border" />
+      {/* Menu */}
+      <div className="space-y-3">
+        <MenuItem
+          icon={<UserIcon size={20} />}
+          title="Profil"
+          subtitle="Lihat informasi akun & achievement"
+          onClick={() => setSheet("profile")}
+          delay={0.05}
+        />
+        <MenuItem
+          icon={<Settings size={20} />}
+          title="Setting"
+          subtitle="Tema, foto profil & akun"
+          onClick={() => setSheet("settings")}
+          delay={0.1}
+        />
+        <MenuItem
+          icon={<Phone size={20} />}
+          title="Hubungi Kami"
+          subtitle="Instagram, Threads & dukungan"
+          onClick={() => setSheet("contact")}
+          delay={0.15}
+        />
+      </div>
 
-      {/* Hubungi Kami */}
-      {sectionTitle("📞", "Hubungi Kami")}
-      <motion.div
-        className="space-y-3"
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-      >
-        <a
-          href="https://www.instagram.com/kitabify.id?igsh=d21iMmNibmQ4Mmw1"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="glass-card p-4 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform block"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-            📷
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground">Instagram Kitabify</p>
-            <p className="text-xs text-muted-foreground">@kitabify.id</p>
-          </div>
-          <ExternalLink className="text-muted-foreground" size={16} />
-        </a>
-
-        <a
-          href="https://www.threads.com/@kitabifyid"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="glass-card p-4 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform block"
-        >
-          <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center text-background font-bold text-lg">
-            @
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground">Threads Kitabify</p>
-            <p className="text-xs text-muted-foreground">@kitabifyid</p>
-          </div>
-          <ExternalLink className="text-muted-foreground" size={16} />
-        </a>
-      </motion.div>
-
-      {/* Divider */}
-      <div className="border-t border-border" />
-
-      {/* Akun */}
-      {sectionTitle("🔐", "Akun")}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-      >
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className="w-full flex items-center gap-3 py-4 px-5 rounded-2xl bg-destructive/10 text-destructive active:scale-[0.98] transition-transform"
-        >
-          <LogOut size={18} />
-          <span className="font-semibold text-sm">Keluar</span>
-        </button>
-      </motion.div>
-
-      {/* Version & Quote */}
+      {/* Quote */}
       <div className="text-center pt-4 pb-2 space-y-2">
         <p className="text-xs text-muted-foreground italic">
           "Barangsiapa menempuh jalan untuk mencari ilmu, maka Allah mudahkan baginya jalan menuju surga." — HR. Muslim
         </p>
         <p className="text-[10px] text-muted-foreground/50 font-mono">Kitabify v1.0.0</p>
       </div>
+
+      {/* Profile Sheet */}
+      <SheetModal open={sheet === "profile"} onClose={() => setSheet(null)} title="👤 Profil">
+        <div className="space-y-5">
+          <div className="flex flex-col items-center text-center">
+            <Avatar size={88} />
+            <h3 className="text-lg font-bold text-foreground mt-3">{user.name}</h3>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-muted/50 rounded-xl p-3">
+              <p className="text-xs text-muted-foreground">Kota</p>
+              <p className="text-sm font-semibold text-foreground">{user.city || "-"}</p>
+            </div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <p className="text-xs text-muted-foreground">Instansi</p>
+              <p className="text-sm font-semibold text-foreground">{user.institution || "-"}</p>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 rounded-2xl">
+            <div className="flex items-center gap-3 mb-3">
+              <Zap className="text-gold" size={20} />
+              <div>
+                <p className="text-sm font-bold text-foreground">
+                  Level {user.level} — {getLevelTitle(user.level)}
+                </p>
+                <p className="text-xs text-muted-foreground">{user.exp} total EXP</p>
+              </div>
+            </div>
+            <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+              <div className="h-full progress-bar-fill transition-all" style={{ width: `${(current / needed) * 100}%` }} />
+            </div>
+          </div>
+
+          <button
+            onClick={() => setSheet("badges")}
+            className="glass-card p-4 w-full text-left rounded-2xl active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Award className="text-gold" size={20} />
+                <div>
+                  <p className="text-sm font-bold text-foreground">Achievement Badge</p>
+                  <p className="text-xs text-muted-foreground">
+                    {earnedBadges.length}/{ALL_BADGES.length} badge diraih
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="text-muted-foreground" size={18} />
+            </div>
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {earnedBadges.map((b) => (
+                <span key={b.id} className="text-2xl">{b.icon}</span>
+              ))}
+              {earnedBadges.length === 0 && (
+                <span className="text-sm text-muted-foreground italic">Belum ada badge</span>
+              )}
+            </div>
+          </button>
+        </div>
+      </SheetModal>
+
+      {/* Settings Sheet */}
+      <SheetModal open={sheet === "settings"} onClose={() => setSheet(null)} title="⚙️ Setting">
+        <div className="space-y-4">
+          {/* Theme */}
+          <div className="glass-card p-4 rounded-2xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {isDark ? <Moon className="text-primary" size={20} /> : <Sun className="text-primary" size={20} />}
+              <div>
+                <p className="text-sm font-bold text-foreground">
+                  {isDark ? "Mode Gelap" : "Mode Terang"}
+                </p>
+                <p className="text-xs text-muted-foreground">Ubah tampilan aplikasi</p>
+              </div>
+            </div>
+            <Switch checked={isDark} onCheckedChange={setIsDark} />
+          </div>
+
+          {/* Change photo */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="glass-card p-4 w-full rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <Avatar size={44} />
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-bold text-foreground">Ganti Foto Profil</p>
+              <p className="text-xs text-muted-foreground">Upload foto dari perangkat</p>
+            </div>
+            <Camera className="text-muted-foreground" size={18} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
+
+          {/* Logout */}
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full flex items-center gap-3 py-4 px-5 rounded-2xl bg-destructive/10 text-destructive active:scale-[0.98] transition-transform"
+          >
+            <LogOut size={18} />
+            <span className="font-semibold text-sm">Keluar / Logout</span>
+          </button>
+        </div>
+      </SheetModal>
+
+      {/* Contact Sheet */}
+      <SheetModal open={sheet === "contact"} onClose={() => setSheet(null)} title="📞 Hubungi Kami">
+        <div className="space-y-3">
+          <a
+            href="https://www.instagram.com/kitabify.id?igsh=d21iMmNibmQ4Mmw1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass-card p-4 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-lg">
+              📷
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">Instagram Kitabify</p>
+              <p className="text-xs text-muted-foreground">@kitabify.id</p>
+            </div>
+            <ExternalLink className="text-muted-foreground" size={16} />
+          </a>
+
+          <a
+            href="https://www.threads.com/@kitabifyid"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass-card p-4 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center text-background font-bold text-lg">
+              @
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">Threads Kitabify</p>
+              <p className="text-xs text-muted-foreground">@kitabifyid</p>
+            </div>
+            <ExternalLink className="text-muted-foreground" size={16} />
+          </a>
+
+          <button
+            onClick={() => setSheet("support")}
+            className="glass-card p-4 w-full rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center">
+              <Heart className="text-primary-foreground" size={18} fill="currentColor" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-bold text-foreground">Support Kami</p>
+              <p className="text-xs text-muted-foreground">Dukung pengembangan Kitabify</p>
+            </div>
+            <ChevronRight className="text-muted-foreground" size={16} />
+          </button>
+        </div>
+      </SheetModal>
+
+      {/* Support Sheet */}
+      <SheetModal open={sheet === "support"} onClose={() => setSheet(null)} title="💛 Support Kami">
+        <div className="space-y-4 text-center">
+          <p className="text-sm text-foreground leading-relaxed">
+            Kami sangat membutuhkan bantuan support kalian untuk membantu mengembangkan aplikasi <span className="font-bold text-primary">Kitabify</span>.
+          </p>
+
+          <div className="glass-card p-4 rounded-2xl">
+            <div className="bg-background rounded-xl p-3 flex items-center justify-center">
+              <img
+                src={supportQr}
+                alt="QR Code Donasi Kitabify"
+                className="w-full max-w-[260px] aspect-square object-contain rounded-lg"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Scan QR code di atas untuk berdonasi
+            </p>
+          </div>
+
+          <p className="text-sm text-foreground leading-relaxed">
+            Berapapun bantuan kalian akan sangat membantu untuk perkembangan aplikasi Kitabify.
+          </p>
+
+          <p className="text-xs text-muted-foreground italic pt-2">
+            Jazakumullahu khairan 🤲
+          </p>
+        </div>
+      </SheetModal>
+
+      {/* Badges Sheet */}
+      <SheetModal open={sheet === "badges"} onClose={() => setSheet("profile")} title="🏅 Semua Badge">
+        <div className="space-y-3">
+          {earnedBadges.map((b) => (
+            <div key={b.id} className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-xl p-4">
+              <span className="text-3xl">{b.icon}</span>
+              <div>
+                <p className="text-sm font-bold text-foreground">{b.name}</p>
+                <p className="text-xs text-muted-foreground">{b.description}</p>
+              </div>
+              <div className="ml-auto gold-badge w-6 h-6 rounded-full flex items-center justify-center text-xs">✓</div>
+            </div>
+          ))}
+          {lockedBadges.map((b) => (
+            <div key={b.id} className="flex items-center gap-4 bg-muted/30 rounded-xl p-4 opacity-50">
+              <span className="text-3xl grayscale">{b.icon}</span>
+              <div>
+                <p className="text-sm font-bold text-foreground">{b.name}</p>
+                <p className="text-xs text-muted-foreground">{b.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </SheetModal>
 
       {/* Logout Confirmation */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
@@ -231,92 +405,15 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleLogout}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Keluar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* EXP History Modal */}
-      <AnimatePresence>
-        {showExpHistory && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-background/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setShowExpHistory(false)}
-          >
-            <motion.div
-              className="w-full max-w-lg bg-card rounded-t-3xl p-6 max-h-[70vh] overflow-y-auto"
-              initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-foreground">Riwayat EXP</h3>
-                <button onClick={() => setShowExpHistory(false)}><X className="text-muted-foreground" size={20} /></button>
-              </div>
-              {user.expHistory.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Belum ada riwayat</p>
-              ) : (
-                <div className="space-y-3">
-                  {[...user.expHistory].reverse().map((h, i) => (
-                    <div key={i} className="flex items-center justify-between bg-muted/50 rounded-xl p-3">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{h.source}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(h.date).toLocaleDateString("id-ID")}</p>
-                      </div>
-                      <span className="gold-badge px-3 py-1 rounded-full text-xs">+{h.amount}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Badges Modal */}
-      <AnimatePresence>
-        {showBadges && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-background/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setShowBadges(false)}
-          >
-            <motion.div
-              className="w-full max-w-lg bg-card rounded-t-3xl p-6 max-h-[70vh] overflow-y-auto"
-              initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-foreground">🏅 Semua Badge</h3>
-                <button onClick={() => setShowBadges(false)}><X className="text-muted-foreground" size={20} /></button>
-              </div>
-              <div className="space-y-3">
-                {earnedBadges.map((b) => (
-                  <div key={b.id} className="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-xl p-4">
-                    <span className="text-3xl">{b.icon}</span>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{b.name}</p>
-                      <p className="text-xs text-muted-foreground">{b.description}</p>
-                    </div>
-                    <div className="ml-auto gold-badge w-6 h-6 rounded-full flex items-center justify-center text-xs">✓</div>
-                  </div>
-                ))}
-                {lockedBadges.map((b) => (
-                  <div key={b.id} className="flex items-center gap-4 bg-muted/30 rounded-xl p-4 opacity-50">
-                    <span className="text-3xl grayscale">{b.icon}</span>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{b.name}</p>
-                      <p className="text-xs text-muted-foreground">{b.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

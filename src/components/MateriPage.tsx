@@ -430,9 +430,10 @@ interface SearchResult {
 
 interface MateriPageProps {
   onGoKuis?: () => void;
+  initialKitabId?: string | null;
 }
 
-const MateriPage = ({ onGoKuis }: MateriPageProps = {}) => {
+const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
   const [openKitab, setOpenKitab] = useState<string | null>(null);
   const [openJilid, setOpenJilid] = useState<string | null>(null);
   const [selectedBab, setSelectedBab] = useState<{ kitabId: string; jilidId: string; babId: string } | null>(null);
@@ -440,6 +441,24 @@ const MateriPage = ({ onGoKuis }: MateriPageProps = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [, setRefresh] = useState(0);
+  // Filter to a single kitab when user arrives via "Materi Populer"
+  const [filterKitabId, setFilterKitabId] = useState<string | null>(initialKitabId ?? null);
+
+  // React to changes from parent (user picks another kitab from dashboard)
+  useEffect(() => {
+    if (initialKitabId !== undefined) {
+      setFilterKitabId(initialKitabId ?? null);
+      if (initialKitabId) {
+        const kitab = MATERI_DATA.find((k) => k.id === initialKitabId);
+        if (kitab?.isKholasoh) {
+          setShowKholasoh(true);
+        } else {
+          setShowKholasoh(false);
+          setOpenKitab(initialKitabId);
+        }
+      }
+    }
+  }, [initialKitabId]);
 
   // Consume pending navigation hint (e.g. when returning from Kuis page)
   useEffect(() => {
@@ -702,9 +721,25 @@ const MateriPage = ({ onGoKuis }: MateriPageProps = {}) => {
   };
 
   // Materi list
+  const visibleKitabs = filterKitabId
+    ? MATERI_DATA.filter((k) => k.id === filterKitabId)
+    : MATERI_DATA;
+  const filteredKitab = filterKitabId ? MATERI_DATA.find((k) => k.id === filterKitabId) : null;
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-extrabold text-foreground mb-4">📚 Materi</h1>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <h1 className="text-2xl font-extrabold text-foreground">
+          {filteredKitab ? `${filteredKitab.icon} ${filteredKitab.title}` : "📚 Materi"}
+        </h1>
+        {filterKitabId && (
+          <button
+            onClick={() => { setFilterKitabId(null); setOpenKitab(null); setOpenJilid(null); }}
+            className="text-xs font-semibold text-primary px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition flex-shrink-0"
+          >
+            Lihat semua
+          </button>
+        )}
+      </div>
 
       {/* Search Bar */}
       <div className="relative mb-5">
@@ -782,7 +817,7 @@ const MateriPage = ({ onGoKuis }: MateriPageProps = {}) => {
 
       {/* Kitab List */}
       <div className="space-y-3">
-        {MATERI_DATA.map((kitab) => (
+        {visibleKitabs.map((kitab) => (
           <div key={kitab.id} className="glass-card overflow-hidden">
             <button
               onClick={() => kitab.isKholasoh ? setShowKholasoh(true) : setOpenKitab(openKitab === kitab.id ? null : kitab.id)}

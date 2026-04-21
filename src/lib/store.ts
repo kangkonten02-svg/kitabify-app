@@ -13,6 +13,7 @@ export interface User {
   materiProgress: Record<string, number>;
   quizScores: Record<string, number>;
   expHistory: { source: string; amount: number; date: string }[];
+  photo?: string;
 }
 
 const DEFAULT_USER: User = {

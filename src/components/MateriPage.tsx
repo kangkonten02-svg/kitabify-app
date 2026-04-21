@@ -372,19 +372,21 @@ const RichContentViewer = ({
 
       {/* Action buttons */}
       <div className="mt-6 space-y-3">
-        <button
-          onClick={markAsRead}
-          disabled={marked}
-          className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${
-            marked ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
-          }`}
-        >
-          {marked ? (
-            <><CheckCircle size={16} /> Sudah selesai membaca ✓</>
-          ) : (
-            <><Star size={16} /> Selesai membaca (+15 EXP)</>
-          )}
-        </button>
+        {babId !== "muqoddimah" && (
+          <button
+            onClick={markAsRead}
+            disabled={marked}
+            className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${
+              marked ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
+            }`}
+          >
+            {marked ? (
+              <><CheckCircle size={16} /> Sudah selesai membaca ✓</>
+            ) : (
+              <><Star size={16} /> Selesai membaca (+15 EXP)</>
+            )}
+          </button>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <button

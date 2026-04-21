@@ -430,9 +430,10 @@ interface SearchResult {
 
 interface MateriPageProps {
   onGoKuis?: () => void;
+  initialKitabId?: string | null;
 }
 
-const MateriPage = ({ onGoKuis }: MateriPageProps = {}) => {
+const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
   const [openKitab, setOpenKitab] = useState<string | null>(null);
   const [openJilid, setOpenJilid] = useState<string | null>(null);
   const [selectedBab, setSelectedBab] = useState<{ kitabId: string; jilidId: string; babId: string } | null>(null);
@@ -440,6 +441,24 @@ const MateriPage = ({ onGoKuis }: MateriPageProps = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [, setRefresh] = useState(0);
+  // Filter to a single kitab when user arrives via "Materi Populer"
+  const [filterKitabId, setFilterKitabId] = useState<string | null>(initialKitabId ?? null);
+
+  // React to changes from parent (user picks another kitab from dashboard)
+  useEffect(() => {
+    if (initialKitabId !== undefined) {
+      setFilterKitabId(initialKitabId ?? null);
+      if (initialKitabId) {
+        const kitab = MATERI_DATA.find((k) => k.id === initialKitabId);
+        if (kitab?.isKholasoh) {
+          setShowKholasoh(true);
+        } else {
+          setShowKholasoh(false);
+          setOpenKitab(initialKitabId);
+        }
+      }
+    }
+  }, [initialKitabId]);
 
   // Consume pending navigation hint (e.g. when returning from Kuis page)
   useEffect(() => {

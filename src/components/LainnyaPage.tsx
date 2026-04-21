@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getUser, logout, getLevelTitle, getExpToNextLevel, ALL_BADGES } from "@/lib/store";
-import { User, Award, Zap, LogOut, ChevronRight, X, Moon, Sun, ExternalLink } from "lucide-react";
+import { getUser, saveUser, logout, getLevelTitle, getExpToNextLevel, ALL_BADGES } from "@/lib/store";
+import { User, Award, Zap, LogOut, ChevronRight, X, Moon, Sun, ExternalLink, Settings, Phone, Heart, Camera, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import supportQr from "@/assets/support-qr.jpg";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -13,8 +14,11 @@ interface LainnyaPageProps {
 }
 
 const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
-  const user = getUser();
-  const [showExpHistory, setShowExpHistory] = useState(false);
+  const [user, setUser] = useState(getUser());
+  const [showProfile, setShowProfile] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showContact, setShowContact] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isDark, setIsDark] = useState(() => {

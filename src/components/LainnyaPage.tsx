@@ -108,7 +108,7 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-lg bg-card rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-lg bg-card rounded-t-3xl p-6 pb-28 max-h-[85vh] overflow-y-auto"
             initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
             onClick={(e) => e.stopPropagation()}
           >

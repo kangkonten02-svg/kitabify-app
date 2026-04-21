@@ -434,6 +434,36 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
         </div>
       </SheetModal>
 
+      {/* Edit name dialog */}
+      <AlertDialog open={showNameEdit} onOpenChange={setShowNameEdit}>
+        <AlertDialogContent className="max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ubah Nama</AlertDialogTitle>
+            <AlertDialogDescription>
+              Masukkan nama yang ingin ditampilkan di profilmu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <input
+              autoFocus
+              type="text"
+              value={nameInput}
+              onChange={(e) => { setNameInput(e.target.value); setNameError(""); }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSaveName(); }}
+              maxLength={50}
+              placeholder="Nama lengkap"
+              className="w-full px-4 py-3 rounded-xl bg-input text-foreground placeholder:text-muted-foreground text-sm border border-border focus:border-primary focus:outline-none transition"
+            />
+            {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+            <p className="text-xs text-muted-foreground text-right">{nameInput.length}/50</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveName}>Simpan</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Logout Confirmation */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent className="max-w-sm rounded-2xl">

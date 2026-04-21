@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getUser, saveUser, logout, getLevelTitle, getExpToNextLevel, ALL_BADGES } from "@/lib/store";
 import {
   User as UserIcon, Award, Zap, LogOut, ChevronRight, X, Moon, Sun,
-  ExternalLink, Settings, Phone, Heart, Camera,
+  ExternalLink, Settings, Phone, Heart, Camera, Pencil,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import supportQr from "@/assets/support-qr.jpg";
@@ -22,6 +22,9 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
   const [user, setUser] = useState(getUser());
   const [sheet, setSheet] = useState<Sheet>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNameEdit, setShowNameEdit] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [nameError, setNameError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDark, setIsDark] = useState(
     () => localStorage.getItem("kitabify_theme") !== "light",
@@ -63,6 +66,28 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
       setUser(updated);
     };
     reader.readAsDataURL(file);
+  };
+
+  const openNameEdit = () => {
+    setNameInput(user.name);
+    setNameError("");
+    setShowNameEdit(true);
+  };
+
+  const handleSaveName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      setNameError("Nama tidak boleh kosong");
+      return;
+    }
+    if (trimmed.length > 50) {
+      setNameError("Nama maksimal 50 karakter");
+      return;
+    }
+    const updated = { ...user, name: trimmed };
+    saveUser(updated);
+    setUser(updated);
+    setShowNameEdit(false);
   };
 
   const MenuItem = ({

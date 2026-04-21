@@ -41,6 +41,11 @@ const AdminPage = () => {
         setAuthorized(false);
         return;
       }
+      // Kitabify root admin — always authorized
+      if (user.email === "kitabifyid@gmail.com") {
+        setAuthorized(true);
+        return;
+      }
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")

@@ -3,8 +3,8 @@ import { Crown, Check, ArrowLeft, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
 
-// Ganti nomor admin sesuai kebutuhan
-const ADMIN_WA = "6281234567890";
+// Nomor WhatsApp admin Kitabify
+const ADMIN_WA = "6285831878561";
 
 const PLANS = [
   {
@@ -43,9 +43,7 @@ const LanggananPage = () => {
   const { active } = useSubscription();
 
   const handleSubscribe = (tier: "VIP" | "VVIP", price: string) => {
-    const text = encodeURIComponent(
-      `Assalamualaikum admin Kitabify, saya ingin berlangganan paket *${tier}* (${price}). Mohon arahan pembayarannya. Terima kasih.`
-    );
+    const text = encodeURIComponent(`Halo min aku mau upgrade Akun menjadi ${tier}`);
     window.open(`https://wa.me/${ADMIN_WA}?text=${text}`, "_blank");
   };
 

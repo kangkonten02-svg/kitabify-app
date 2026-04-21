@@ -9,6 +9,7 @@ import {
   Search,
   Plus,
   RefreshCw,
+  LogOut,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +33,15 @@ const AdminPage = () => {
   const [editTier, setEditTier] = useState<SubscriptionTier>("VIP");
   const [addDays, setAddDays] = useState(180);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await supabase.auth.signOut();
+    localStorage.removeItem("kitabify_user");
+    toast.success("Berhasil keluar");
+    navigate("/", { replace: true });
+  };
 
   // Auth + admin check
   useEffect(() => {
@@ -174,12 +184,22 @@ const AdminPage = () => {
   return (
     <div className="min-h-screen bg-background bg-texture pb-12">
       <div className="max-w-2xl mx-auto px-4 pt-6">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-muted-foreground mb-4 hover:text-foreground"
-        >
-          <ArrowLeft size={20} /> Kembali
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft size={20} /> Kembali
+          </button>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <LogOut size={16} />
+            {loggingOut ? "Keluar..." : "Keluar"}
+          </button>
+        </div>
 
         <h1 className="text-3xl font-extrabold text-foreground">Panel Admin</h1>
         <p className="text-muted-foreground text-sm mt-1">Kelola user & langganan</p>

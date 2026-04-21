@@ -45,9 +45,14 @@ export const MATERI_DATA: Kitab[] = [
     id: "amtsilati", title: "Amtsilati", icon: "📘",
     jilids: [
       {
-        id: "jilid1", title: "Jilid 1",
+        id: "muqoddimah_sec", title: "Muqoddimah",
         babs: [
           { id: "muqoddimah", title: "Muqoddimah" },
+        ],
+      },
+      {
+        id: "jilid1", title: "Jilid 1",
+        babs: [
           { id: "huruf_jar", title: "Bab 1 - Huruf Jar" },
           { id: "isim_dhomir", title: "Bab 2 - Isim Dhomir" },
           { id: "isim_isyaroh", title: "Bab 3 - Isim Isyaroh" },
@@ -77,9 +82,9 @@ export const MATERI_DATA: Kitab[] = [
       },
       { id: "jilid4", title: "Jilid 4", babs: [{ id: "j4_info", title: "Materi sedang disusun" }] },
       { id: "jilid5", title: "Jilid 5", babs: [{ id: "j5_info", title: "Materi sedang disusun" }] },
+      { id: "shorofiyah", title: "Shorofiyah", babs: [{ id: "sho_info", title: "Materi sedang disusun" }] },
       { id: "tatimah", title: "Tatimah", babs: [{ id: "tat_info", title: "Materi sedang disusun" }] },
       { id: "qoidati", title: "Qoidati", babs: [{ id: "qoi_info", title: "Materi sedang disusun" }] },
-      { id: "shorofiyah", title: "Shorofiyah", babs: [{ id: "sho_info", title: "Materi sedang disusun" }] },
     ],
   },
   {

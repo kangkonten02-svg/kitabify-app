@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import SplashScreen from "@/components/SplashScreen";
 import AuthScreen from "@/components/AuthScreen";
 import BottomNav, { type Tab } from "@/components/BottomNav";
@@ -13,6 +14,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [screen, setScreen] = useState<"splash" | "auth" | "app">("splash");
   const [tab, setTab] = useState<Tab>("dashboard");
   const [, setRefresh] = useState(0);
@@ -29,6 +31,11 @@ const Index = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
+        // Admin redirect — Kitabify admin goes straight to panel
+        if (session.user.email === "kitabifyid@gmail.com") {
+          navigate("/admin", { replace: true });
+          return;
+        }
         // Sync local user data
         if (!getUser() || getUser()?.email !== session.user.email) {
           const newUser: User = {
@@ -51,6 +58,10 @@ const Index = () => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        if (session.user.email === "kitabifyid@gmail.com") {
+          navigate("/admin", { replace: true });
+          return;
+        }
         if (!getUser()) {
           const newUser: User = {
             name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
@@ -68,7 +79,7 @@ const Index = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const refreshApp = () => setRefresh((r) => r + 1);
 

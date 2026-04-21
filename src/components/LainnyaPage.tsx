@@ -302,6 +302,21 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
             onChange={handlePhotoUpload}
           />
 
+          {/* Change name */}
+          <button
+            onClick={openNameEdit}
+            className="glass-card p-4 w-full rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
+              <Pencil size={20} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-bold text-foreground">Ubah Nama</p>
+              <p className="text-xs text-muted-foreground truncate">{user.name}</p>
+            </div>
+            <ChevronRight className="text-muted-foreground" size={18} />
+          </button>
+
           {/* Logout */}
           <button
             onClick={() => setShowLogoutConfirm(true)}

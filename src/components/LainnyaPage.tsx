@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getUser, saveUser, logout, getLevelTitle, getExpToNextLevel, ALL_BADGES } from "@/lib/store";
 import {
   User as UserIcon, Award, Zap, LogOut, ChevronRight, X, Moon, Sun,
-  ExternalLink, Settings, Phone, Heart, Camera,
+  ExternalLink, Settings, Phone, Heart, Camera, Pencil,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import supportQr from "@/assets/support-qr.jpg";
@@ -22,6 +22,9 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
   const [user, setUser] = useState(getUser());
   const [sheet, setSheet] = useState<Sheet>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNameEdit, setShowNameEdit] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [nameError, setNameError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDark, setIsDark] = useState(
     () => localStorage.getItem("kitabify_theme") !== "light",
@@ -63,6 +66,28 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
       setUser(updated);
     };
     reader.readAsDataURL(file);
+  };
+
+  const openNameEdit = () => {
+    setNameInput(user.name);
+    setNameError("");
+    setShowNameEdit(true);
+  };
+
+  const handleSaveName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      setNameError("Nama tidak boleh kosong");
+      return;
+    }
+    if (trimmed.length > 50) {
+      setNameError("Nama maksimal 50 karakter");
+      return;
+    }
+    const updated = { ...user, name: trimmed };
+    saveUser(updated);
+    setUser(updated);
+    setShowNameEdit(false);
   };
 
   const MenuItem = ({
@@ -277,6 +302,21 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
             onChange={handlePhotoUpload}
           />
 
+          {/* Change name */}
+          <button
+            onClick={openNameEdit}
+            className="glass-card p-4 w-full rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
+              <Pencil size={20} />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-bold text-foreground">Ubah Nama</p>
+              <p className="text-xs text-muted-foreground truncate">{user.name}</p>
+            </div>
+            <ChevronRight className="text-muted-foreground" size={18} />
+          </button>
+
           {/* Logout */}
           <button
             onClick={() => setShowLogoutConfirm(true)}
@@ -393,6 +433,36 @@ const LainnyaPage = ({ onLogout }: LainnyaPageProps) => {
           ))}
         </div>
       </SheetModal>
+
+      {/* Edit name dialog */}
+      <AlertDialog open={showNameEdit} onOpenChange={setShowNameEdit}>
+        <AlertDialogContent className="max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ubah Nama</AlertDialogTitle>
+            <AlertDialogDescription>
+              Masukkan nama yang ingin ditampilkan di profilmu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <input
+              autoFocus
+              type="text"
+              value={nameInput}
+              onChange={(e) => { setNameInput(e.target.value); setNameError(""); }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSaveName(); }}
+              maxLength={50}
+              placeholder="Nama lengkap"
+              className="w-full px-4 py-3 rounded-xl bg-input text-foreground placeholder:text-muted-foreground text-sm border border-border focus:border-primary focus:outline-none transition"
+            />
+            {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+            <p className="text-xs text-muted-foreground text-right">{nameInput.length}/50</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveName}>Simpan</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Logout Confirmation */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>

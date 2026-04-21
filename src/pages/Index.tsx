@@ -20,6 +20,7 @@ const Index = () => {
   const [screen, setScreen] = useState<"splash" | "auth" | "app">("splash");
   const [tab, setTab] = useState<Tab>("dashboard");
   const [, setRefresh] = useState(0);
+  const [materiKitabId, setMateriKitabId] = useState<string | null>(null);
   const visitTracked = useRef(false);
   const [dailyOpen, setDailyOpen] = useState(false);
   const [dailyReward, setDailyReward] = useState<DailyReward | null>(null);
@@ -121,9 +122,15 @@ const Index = () => {
     <PopupModalProvider>
       <div className="min-h-screen bg-background bg-texture relative">
         {tab === "dashboard" && (
-          <DashboardPage onGoMateri={() => { setTab("materi"); refreshApp(); }} />
+          <DashboardPage onGoMateri={(kitabId) => { setMateriKitabId(kitabId ?? null); setTab("materi"); refreshApp(); }} />
         )}
-        {tab === "materi" && <MateriPage onGoKuis={() => { setTab("kuis"); refreshApp(); }} />}
+        {tab === "materi" && (
+          <MateriPage
+            key={materiKitabId ?? "all"}
+            initialKitabId={materiKitabId}
+            onGoKuis={() => { setTab("kuis"); refreshApp(); }}
+          />
+        )}
         {tab === "kuis" && <KuisPage onGoMateri={() => { setTab("materi"); refreshApp(); }} />}
         {tab === "lainnya" && (
           <LainnyaPage onLogout={async () => {
@@ -133,7 +140,7 @@ const Index = () => {
             refreshApp();
           }} />
         )}
-        <BottomNav active={tab} onNavigate={(t) => { setTab(t); refreshApp(); }} />
+        <BottomNav active={tab} onNavigate={(t) => { if (t === "materi") setMateriKitabId(null); setTab(t); refreshApp(); }} />
       </div>
       {dailyReward && (
         <DailyLoginModal

@@ -12,6 +12,8 @@ import { PopupModalProvider } from "@/components/InteractivePopup";
 import { supabase } from "@/integrations/supabase/client";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/firebase";
+import DailyLoginModal from "@/components/DailyLoginModal";
+import { checkAndClaimDailyLogin, type DailyReward } from "@/lib/dailyLogin";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,6 +21,22 @@ const Index = () => {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [, setRefresh] = useState(0);
   const visitTracked = useRef(false);
+  const [dailyOpen, setDailyOpen] = useState(false);
+  const [dailyReward, setDailyReward] = useState<DailyReward | null>(null);
+  const [dailyStreak, setDailyStreak] = useState(0);
+  const dailyChecked = useRef(false);
+
+  // Trigger daily login claim the first time we enter the "app" screen
+  useEffect(() => {
+    if (screen !== "app" || dailyChecked.current) return;
+    dailyChecked.current = true;
+    const result = checkAndClaimDailyLogin();
+    if (result.claimed) {
+      setDailyReward(result.reward);
+      setDailyStreak(result.streak);
+      setDailyOpen(true);
+    }
+  }, [screen]);
 
   useEffect(() => {
     if (!visitTracked.current) {
@@ -117,6 +135,14 @@ const Index = () => {
         )}
         <BottomNav active={tab} onNavigate={(t) => { setTab(t); refreshApp(); }} />
       </div>
+      {dailyReward && (
+        <DailyLoginModal
+          open={dailyOpen}
+          streak={dailyStreak}
+          reward={dailyReward}
+          onClose={() => { setDailyOpen(false); refreshApp(); }}
+        />
+      )}
     </PopupModalProvider>
   );
 };

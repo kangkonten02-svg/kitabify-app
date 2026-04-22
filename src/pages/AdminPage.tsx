@@ -19,6 +19,9 @@ interface UserRow {
   id: string;
   email: string;
   full_name: string;
+  city: string | null;
+  institution: string | null;
+  phone: string | null;
   created_at: string;
   subscription: Subscription | null;
 }
@@ -69,7 +72,7 @@ const AdminPage = () => {
     setLoading(true);
     // Profiles + subscriptions
     const [{ data: profiles }, { data: subs }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, created_at"),
+      supabase.from("profiles").select("id, full_name, created_at, phone, city, institution" as any),
       supabase.from("subscriptions").select("*"),
     ]);
 
@@ -83,6 +86,9 @@ const AdminPage = () => {
       id: p.id,
       email: "", // tidak tersedia tanpa service role
       full_name: p.full_name || "User",
+      city: p.city || null,
+      institution: p.institution || null,
+      phone: p.phone || null,
       created_at: p.created_at,
       subscription: subMap.get(p.id) || null,
     }));
@@ -112,7 +118,12 @@ const AdminPage = () => {
     if (!search) return rows;
     const q = search.toLowerCase();
     return rows.filter(
-      (r) => r.full_name.toLowerCase().includes(q) || r.id.includes(q)
+      (r) =>
+        r.full_name.toLowerCase().includes(q) ||
+        r.id.includes(q) ||
+        (r.city || "").toLowerCase().includes(q) ||
+        (r.institution || "").toLowerCase().includes(q) ||
+        (r.phone || "").toLowerCase().includes(q)
     );
   }, [rows, search]);
 
@@ -220,7 +231,7 @@ const AdminPage = () => {
           />
           <input
             type="text"
-            placeholder="Cari nama atau ID..."
+            placeholder="Cari nama, kota, instansi, HP..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -242,7 +253,7 @@ const AdminPage = () => {
             return (
               <motion.div
                 key={row.id}
-                className="glass-card p-3 flex items-center gap-3"
+                className="glass-card p-3 flex items-start gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
@@ -253,7 +264,18 @@ const AdminPage = () => {
                   <p className="text-sm font-bold text-foreground truncate">
                     {row.full_name}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <div className="text-xs text-muted-foreground space-y-0.5 mt-0.5">
+                    {row.city && (
+                      <p className="truncate">📍 {row.city}</p>
+                    )}
+                    {row.institution && (
+                      <p className="truncate">🏫 {row.institution}</p>
+                    )}
+                    {row.phone && (
+                      <p className="truncate">📱 {row.phone}</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-1">
                     {a.effectiveTier} ·{" "}
                     {a.source === "free"
                       ? "Tidak aktif"

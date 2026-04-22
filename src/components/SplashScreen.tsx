@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import kitabifyLogo from "@/assets/kitabify-logo.png";
+import kitabifyLogo from "@/assets/kitabify-logo-transparent.png";
 import kitabifyBg from "@/assets/kitabify-bg.png";
 
 const slides = [
@@ -42,7 +42,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <img src={kitabifyLogo} alt="Kitabify" className="w-28 h-28 rounded-3xl shadow-2xl mb-4" />
+        <img src={kitabifyLogo} alt="Kitabify" className="w-32 h-32 mb-4" />
         <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Kitabify</h1>
         <p className="text-muted-foreground text-sm mt-1">Belajar Kitab Kuning Jadi Lebih Mudah</p>
       </motion.div>

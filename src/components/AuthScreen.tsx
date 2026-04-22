@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { saveUser, type User } from "@/lib/store";
-import kitabifyLogo from "@/assets/kitabify-logo.png";
+import kitabifyLogo from "@/assets/kitabify-logo-transparent.png";
 import kitabifyBg from "@/assets/kitabify-bg.png";
 
 interface AuthScreenProps {
@@ -136,7 +136,7 @@ const AuthScreen = ({ onAuth }: AuthScreenProps) => {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex flex-col items-center mb-8">
-          <img src={kitabifyLogo} alt="Kitabify" className="w-20 h-20 rounded-2xl shadow-xl mb-3" />
+          <img src={kitabifyLogo} alt="Kitabify" className="w-24 h-24 mb-3" />
           <h1 className="text-2xl font-extrabold text-foreground">Kitabify</h1>
         </div>
 

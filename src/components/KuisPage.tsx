@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NAHWU_BANK, type NahwuBab, type NahwuSoal } from "@/lib/nahwuQuizData";
 import { addExp, getUser, saveUser } from "@/lib/store";

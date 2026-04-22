@@ -104,7 +104,7 @@ const AuthScreen = ({ onAuth }: AuthScreenProps) => {
           city: form.city || null,
           institution: form.institution || null,
           phone: form.phone || null,
-        })
+        } as never)
         .eq("id", data.user.id);
 
       initLocalUser(form.name, form.email, "Registrasi");

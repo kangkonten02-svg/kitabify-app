@@ -118,7 +118,12 @@ const AdminPage = () => {
     if (!search) return rows;
     const q = search.toLowerCase();
     return rows.filter(
-      (r) => r.full_name.toLowerCase().includes(q) || r.id.includes(q)
+      (r) =>
+        r.full_name.toLowerCase().includes(q) ||
+        r.id.includes(q) ||
+        (r.city || "").toLowerCase().includes(q) ||
+        (r.institution || "").toLowerCase().includes(q) ||
+        (r.phone || "").toLowerCase().includes(q)
     );
   }, [rows, search]);
 

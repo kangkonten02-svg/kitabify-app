@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { saveUser, type User } from "@/lib/store";
-import kitabifyLogo from "@/assets/kitabify-logo.png";
+import kitabifyLogo from "@/assets/kitabify-logo-transparent.png";
 import kitabifyBg from "@/assets/kitabify-bg.png";
 
 interface AuthScreenProps {

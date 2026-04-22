@@ -84,30 +84,35 @@ const AuthScreen = ({ onAuth }: AuthScreenProps) => {
         data: {
           full_name: form.name,
           phone: form.phone || null,
+          city: form.city || null,
+          institution: form.institution || null,
         },
         emailRedirectTo: window.location.origin,
       },
     });
-    setLoading(false);
 
-    if (authError) return setError(authError.message);
-
-    if (data.user) {
-      initLocalUser(form.name, form.email, "Registrasi");
-      onAuth();
+    if (authError) {
+      setLoading(false);
+      return setError(authError.message);
     }
-  };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-    setLoading(false);
-    if (authError) setError(authError.message);
+    // Persist city/institution/phone into profiles row (trigger creates row from full_name only)
+    if (data.user) {
+      await supabase
+        .from("profiles")
+        .update({
+          city: form.city || null,
+          institution: form.institution || null,
+          phone: form.phone || null,
+        })
+        .eq("id", data.user.id);
+
+      initLocalUser(form.name, form.email, "Registrasi");
+      setLoading(false);
+      onAuth();
+    } else {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = async () => {

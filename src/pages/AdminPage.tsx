@@ -19,6 +19,9 @@ interface UserRow {
   id: string;
   email: string;
   full_name: string;
+  city: string | null;
+  institution: string | null;
+  phone: string | null;
   created_at: string;
   subscription: Subscription | null;
 }
@@ -69,7 +72,7 @@ const AdminPage = () => {
     setLoading(true);
     // Profiles + subscriptions
     const [{ data: profiles }, { data: subs }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, created_at"),
+      supabase.from("profiles").select("id, full_name, created_at, phone, city, institution" as any),
       supabase.from("subscriptions").select("*"),
     ]);
 
@@ -83,6 +86,9 @@ const AdminPage = () => {
       id: p.id,
       email: "", // tidak tersedia tanpa service role
       full_name: p.full_name || "User",
+      city: p.city || null,
+      institution: p.institution || null,
+      phone: p.phone || null,
       created_at: p.created_at,
       subscription: subMap.get(p.id) || null,
     }));

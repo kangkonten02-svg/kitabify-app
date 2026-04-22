@@ -231,7 +231,7 @@ const AdminPage = () => {
           />
           <input
             type="text"
-            placeholder="Cari nama atau ID..."
+            placeholder="Cari nama, kota, instansi, HP..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -253,7 +253,7 @@ const AdminPage = () => {
             return (
               <motion.div
                 key={row.id}
-                className="glass-card p-3 flex items-center gap-3"
+                className="glass-card p-3 flex items-start gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
@@ -264,7 +264,18 @@ const AdminPage = () => {
                   <p className="text-sm font-bold text-foreground truncate">
                     {row.full_name}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <div className="text-xs text-muted-foreground space-y-0.5 mt-0.5">
+                    {row.city && (
+                      <p className="truncate">📍 {row.city}</p>
+                    )}
+                    {row.institution && (
+                      <p className="truncate">🏫 {row.institution}</p>
+                    )}
+                    {row.phone && (
+                      <p className="truncate">📱 {row.phone}</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-1">
                     {a.effectiveTier} ·{" "}
                     {a.source === "free"
                       ? "Tidak aktif"

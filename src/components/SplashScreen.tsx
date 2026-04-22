@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import kitabifyLogo from "@/assets/kitabify-logo.png";
+import kitabifyLogo from "@/assets/kitabify-logo-transparent.png";
 import kitabifyBg from "@/assets/kitabify-bg.png";
 
 const slides = [

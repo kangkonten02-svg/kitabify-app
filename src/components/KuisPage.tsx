@@ -476,41 +476,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   // =====================================================
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-2xl">📝</span>
-        <h1 className="text-2xl font-extrabold">Kuis</h1>
-      </div>
-      <p className="text-sm text-muted-foreground mb-5">
-        Latihan soal berbasis materi Nahwu dari Jilid 1, Jilid 2, dan Jilid 3
+      <h1 className="text-2xl font-extrabold mb-1">Kuis</h1>
+      <p className="text-sm text-muted-foreground mb-6">
+        Latihan soal Nahwu per jilid
       </p>
-
-      {/* Quick chips */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
-        {JILID_LIST.map((j) => {
-          const c = COLOR_MAP[j.color];
-          const totalSoal = j.babs.reduce((s, b) => s + b.soal.length, 0);
-          return (
-            <button
-              key={j.id}
-              onClick={() => openJilid(j)}
-              className={`p-3 rounded-2xl border-2 ${c.border} ${c.bgSoft} text-left active:scale-95 transition`}
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-lg">📘</span>
-                <span className={`font-extrabold text-sm ${c.text}`}>{j.title}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground leading-tight">
-                {j.babs.length} bab • {totalSoal} soal
-              </p>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-2 mb-3">
-        <BookOpen size={16} className="text-primary" />
-        <h2 className="font-bold text-sm">Pilih Jilid untuk memulai belajar</h2>
-      </div>
 
       <div className="space-y-3">
         {JILID_LIST.map((j) => {
@@ -520,31 +489,19 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
               key={j.id}
               onClick={() => openJilid(j)}
               whileTap={{ scale: 0.98 }}
-              className={`glass-card w-full p-4 text-left flex items-center gap-3 border ${c.border}`}
+              className={`glass-card w-full p-5 text-left flex items-center gap-4 border border-border/40`}
             >
-              <div className={`w-12 h-12 rounded-xl ${c.bg} text-white flex items-center justify-center text-2xl shrink-0`}>
-                📘
+              <div className={`w-12 h-12 rounded-xl ${c.bgSoft} ${c.text} flex items-center justify-center shrink-0`}>
+                <BookOpen size={20} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-extrabold ${c.text} truncate`}>{j.title}</h3>
-                <p className="text-xs text-muted-foreground truncate">{j.subtitle}</p>
+                <h3 className="font-extrabold text-foreground truncate">{j.title}</h3>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{j.subtitle}</p>
               </div>
-              <ChevronRight size={20} className={`${c.text} shrink-0`} />
+              <ChevronRight size={18} className="text-muted-foreground shrink-0" />
             </motion.button>
           );
         })}
-      </div>
-
-      <div className="mt-5 glass-card p-4 border border-accent/40">
-        <div className="flex items-start gap-3">
-          <Lightbulb className="text-accent shrink-0 mt-0.5" size={20} />
-          <div>
-            <h3 className="font-bold text-sm mb-1">Tips Belajar</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Kerjakan soal secara bertahap dan pahami pembahasannya agar lebih mudah menguasai Nahwu.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -269,12 +269,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {!showFeedback && mode === "ujian" && (
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            Mode ujian — pembahasan ditampilkan di akhir
-          </p>
-        )}
       </div>
     );
   }

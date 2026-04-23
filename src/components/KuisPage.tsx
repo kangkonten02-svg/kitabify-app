@@ -10,11 +10,10 @@ import {
 import { addExp, getUser, saveUser } from "@/lib/store";
 import {
   CheckCircle, XCircle, Trophy, RotateCcw, ArrowLeft, ArrowRight,
-  BookOpen, GraduationCap, Sparkles, Gift, ChevronRight, List, Lightbulb,
+  BookOpen, Sparkles, Gift, ChevronRight,
 } from "lucide-react";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
-type Mode = "latihan" | "ujian";
 type Letter = "A" | "B" | "C" | "D";
 
 interface AnswerLog {
@@ -66,7 +65,6 @@ function QuestionText({ text }: { text: string }) {
 
 const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [phase, setPhase] = useState<Phase>("jilid");
-  const [mode, setMode] = useState<Mode>("latihan");
   const [activeJilid, setActiveJilid] = useState<NahwuJilid | null>(null);
   const [activeBab, setActiveBab] = useState<NahwuBab | null>(null);
   const [currentQ, setCurrentQ] = useState(0);
@@ -116,11 +114,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     const correct = soal.jawaban === letter;
     setPicked(letter);
     setLogs((prev) => [...prev, { soal, picked: letter, correct }]);
-    if (mode === "latihan") {
-      setShowFeedback(true);
-    } else {
-      setTimeout(() => goNext(), 150);
-    }
+    setShowFeedback(true);
   };
 
   const goNext = () => {
@@ -181,9 +175,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
             <ArrowLeft size={16} /> Kembali
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-bold">
-              {mode === "latihan" ? "Latihan" : "Ujian"}
-            </span>
             <span className="text-xs text-muted-foreground font-medium">
               Soal {currentQ + 1} dari {total}
             </span>
@@ -278,12 +269,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {!showFeedback && mode === "ujian" && (
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            Mode ujian — pembahasan ditampilkan di akhir
-          </p>
-        )}
       </div>
     );
   }
@@ -426,7 +411,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   // =====================================================
   if (phase === "bab" && activeJilid) {
     const c = COLOR_MAP[activeJilid.color];
-    const totalSoal = activeJilid.babs.reduce((s, b) => s + b.soal.length, 0);
 
     return (
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -446,38 +430,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
           </div>
         </div>
 
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${c.bgSoft} ${c.text} text-xs font-bold mb-5`}>
-          {activeJilid.babs.length} bab • {totalSoal} soal
-        </div>
-
-        {/* Mode toggle */}
-        <div className="glass-card p-1 grid grid-cols-2 gap-1 mb-3">
-          <button
-            onClick={() => setMode("latihan")}
-            className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition ${
-              mode === "latihan" ? `${c.bg} text-white` : "text-muted-foreground"
-            }`}
-          >
-            <BookOpen size={16} /> Latihan
-          </button>
-          <button
-            onClick={() => setMode("ujian")}
-            className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition ${
-              mode === "ujian" ? `${c.bg} text-white` : "text-muted-foreground"
-            }`}
-          >
-            <GraduationCap size={16} /> Ujian
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground text-center mb-5">
-          {mode === "latihan" ? "Pembahasan muncul setelah tiap soal" : "Pembahasan muncul di akhir"}
-        </p>
-
-        <div className="flex items-center gap-2 mb-3">
-          <List size={16} className={c.text} />
-          <h2 className="font-bold">Pilih Bab</h2>
-        </div>
-
         <div className="space-y-3">
           {activeJilid.babs.map((bab) => {
             const best = bestScores[bab.id] ?? 0;
@@ -488,43 +440,31 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                 key={bab.id}
                 onClick={() => startQuiz(bab)}
                 whileTap={{ scale: 0.98 }}
-                className={`glass-card w-full p-4 text-left flex items-center gap-3 hover:${c.border} transition border`}
+                className={`glass-card w-full p-5 text-left flex items-center gap-4 border border-border/40`}
               >
-                <div className={`w-11 h-11 rounded-xl ${c.bg} text-white flex items-center justify-center text-lg font-extrabold shrink-0`}>
+                <div className={`w-11 h-11 rounded-xl ${c.bgSoft} ${c.text} flex items-center justify-center text-base font-extrabold shrink-0`}>
                   {bab.number}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-foreground text-sm truncate">
-                    Bab {bab.number} — {bab.title}
+                  <h3 className="font-bold text-foreground text-base truncate">
+                    {bab.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground truncate">{bab.description}</p>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{bab.description}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${c.bgSoft} ${c.text} font-bold`}>
                       {total} soal
                     </span>
                     {best > 0 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-bold">
-                        ⭐ {best}/{total} ({pct}%)
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                        ⭐ {best}/{total}
                       </span>
                     )}
                   </div>
                 </div>
-                <ChevronRight size={20} className={`${c.text} shrink-0`} />
+                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
               </motion.button>
             );
           })}
-        </div>
-
-        <div className={`mt-5 glass-card p-4 border ${c.border}`}>
-          <div className="flex items-start gap-3">
-            <Lightbulb className={`${c.text} shrink-0 mt-0.5`} size={20} />
-            <div>
-              <h3 className="font-bold text-sm mb-1">Tips Belajar</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Kerjakan soal secara bertahap dan pahami pembahasannya agar lebih mudah menguasai Nahwu.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -535,41 +475,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   // =====================================================
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-2xl">📝</span>
-        <h1 className="text-2xl font-extrabold">Kuis</h1>
-      </div>
-      <p className="text-sm text-muted-foreground mb-5">
-        Latihan soal berbasis materi Nahwu dari Jilid 1, Jilid 2, dan Jilid 3
+      <h1 className="text-2xl font-extrabold mb-1">Kuis</h1>
+      <p className="text-sm text-muted-foreground mb-6">
+        Latihan soal Nahwu per jilid
       </p>
-
-      {/* Quick chips */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
-        {JILID_LIST.map((j) => {
-          const c = COLOR_MAP[j.color];
-          const totalSoal = j.babs.reduce((s, b) => s + b.soal.length, 0);
-          return (
-            <button
-              key={j.id}
-              onClick={() => openJilid(j)}
-              className={`p-3 rounded-2xl border-2 ${c.border} ${c.bgSoft} text-left active:scale-95 transition`}
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-lg">📘</span>
-                <span className={`font-extrabold text-sm ${c.text}`}>{j.title}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground leading-tight">
-                {j.babs.length} bab • {totalSoal} soal
-              </p>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-2 mb-3">
-        <BookOpen size={16} className="text-primary" />
-        <h2 className="font-bold text-sm">Pilih Jilid untuk memulai belajar</h2>
-      </div>
 
       <div className="space-y-3">
         {JILID_LIST.map((j) => {
@@ -579,31 +488,19 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
               key={j.id}
               onClick={() => openJilid(j)}
               whileTap={{ scale: 0.98 }}
-              className={`glass-card w-full p-4 text-left flex items-center gap-3 border ${c.border}`}
+              className={`glass-card w-full p-5 text-left flex items-center gap-4 border border-border/40`}
             >
-              <div className={`w-12 h-12 rounded-xl ${c.bg} text-white flex items-center justify-center text-2xl shrink-0`}>
-                📘
+              <div className={`w-12 h-12 rounded-xl ${c.bgSoft} ${c.text} flex items-center justify-center shrink-0`}>
+                <BookOpen size={20} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-extrabold ${c.text} truncate`}>{j.title}</h3>
-                <p className="text-xs text-muted-foreground truncate">{j.subtitle}</p>
+                <h3 className="font-extrabold text-foreground truncate">{j.title}</h3>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{j.subtitle}</p>
               </div>
-              <ChevronRight size={20} className={`${c.text} shrink-0`} />
+              <ChevronRight size={18} className="text-muted-foreground shrink-0" />
             </motion.button>
           );
         })}
-      </div>
-
-      <div className="mt-5 glass-card p-4 border border-accent/40">
-        <div className="flex items-start gap-3">
-          <Lightbulb className="text-accent shrink-0 mt-0.5" size={20} />
-          <div>
-            <h3 className="font-bold text-sm mb-1">Tips Belajar</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Kerjakan soal secara bertahap dan pahami pembahasannya agar lebih mudah menguasai Nahwu.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

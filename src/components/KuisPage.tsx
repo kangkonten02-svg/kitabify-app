@@ -10,11 +10,10 @@ import {
 import { addExp, getUser, saveUser } from "@/lib/store";
 import {
   CheckCircle, XCircle, Trophy, RotateCcw, ArrowLeft, ArrowRight,
-  BookOpen, GraduationCap, Sparkles, Gift, ChevronRight, List, Lightbulb,
+  BookOpen, Sparkles, Gift, ChevronRight,
 } from "lucide-react";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
-type Mode = "latihan" | "ujian";
 type Letter = "A" | "B" | "C" | "D";
 
 interface AnswerLog {
@@ -66,7 +65,6 @@ function QuestionText({ text }: { text: string }) {
 
 const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [phase, setPhase] = useState<Phase>("jilid");
-  const [mode, setMode] = useState<Mode>("latihan");
   const [activeJilid, setActiveJilid] = useState<NahwuJilid | null>(null);
   const [activeBab, setActiveBab] = useState<NahwuBab | null>(null);
   const [currentQ, setCurrentQ] = useState(0);

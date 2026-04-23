@@ -175,9 +175,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
             <ArrowLeft size={16} /> Kembali
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-bold">
-              {mode === "latihan" ? "Latihan" : "Ujian"}
-            </span>
             <span className="text-xs text-muted-foreground font-medium">
               Soal {currentQ + 1} dari {total}
             </span>

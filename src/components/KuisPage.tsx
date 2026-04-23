@@ -411,7 +411,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   // =====================================================
   if (phase === "bab" && activeJilid) {
     const c = COLOR_MAP[activeJilid.color];
-    const totalSoal = activeJilid.babs.reduce((s, b) => s + b.soal.length, 0);
 
     return (
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">

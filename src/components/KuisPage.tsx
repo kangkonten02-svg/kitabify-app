@@ -114,11 +114,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     const correct = soal.jawaban === letter;
     setPicked(letter);
     setLogs((prev) => [...prev, { soal, picked: letter, correct }]);
-    if (mode === "latihan") {
-      setShowFeedback(true);
-    } else {
-      setTimeout(() => goNext(), 150);
-    }
+    setShowFeedback(true);
   };
 
   const goNext = () => {

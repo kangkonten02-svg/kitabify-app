@@ -431,38 +431,6 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
           </div>
         </div>
 
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${c.bgSoft} ${c.text} text-xs font-bold mb-5`}>
-          {activeJilid.babs.length} bab • {totalSoal} soal
-        </div>
-
-        {/* Mode toggle */}
-        <div className="glass-card p-1 grid grid-cols-2 gap-1 mb-3">
-          <button
-            onClick={() => setMode("latihan")}
-            className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition ${
-              mode === "latihan" ? `${c.bg} text-white` : "text-muted-foreground"
-            }`}
-          >
-            <BookOpen size={16} /> Latihan
-          </button>
-          <button
-            onClick={() => setMode("ujian")}
-            className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition ${
-              mode === "ujian" ? `${c.bg} text-white` : "text-muted-foreground"
-            }`}
-          >
-            <GraduationCap size={16} /> Ujian
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground text-center mb-5">
-          {mode === "latihan" ? "Pembahasan muncul setelah tiap soal" : "Pembahasan muncul di akhir"}
-        </p>
-
-        <div className="flex items-center gap-2 mb-3">
-          <List size={16} className={c.text} />
-          <h2 className="font-bold">Pilih Bab</h2>
-        </div>
-
         <div className="space-y-3">
           {activeJilid.babs.map((bab) => {
             const best = bestScores[bab.id] ?? 0;
@@ -473,43 +441,31 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                 key={bab.id}
                 onClick={() => startQuiz(bab)}
                 whileTap={{ scale: 0.98 }}
-                className={`glass-card w-full p-4 text-left flex items-center gap-3 hover:${c.border} transition border`}
+                className={`glass-card w-full p-5 text-left flex items-center gap-4 border border-border/40`}
               >
-                <div className={`w-11 h-11 rounded-xl ${c.bg} text-white flex items-center justify-center text-lg font-extrabold shrink-0`}>
+                <div className={`w-11 h-11 rounded-xl ${c.bgSoft} ${c.text} flex items-center justify-center text-base font-extrabold shrink-0`}>
                   {bab.number}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-foreground text-sm truncate">
-                    Bab {bab.number} — {bab.title}
+                  <h3 className="font-bold text-foreground text-base truncate">
+                    {bab.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground truncate">{bab.description}</p>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{bab.description}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${c.bgSoft} ${c.text} font-bold`}>
                       {total} soal
                     </span>
                     {best > 0 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-bold">
-                        ⭐ {best}/{total} ({pct}%)
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                        ⭐ {best}/{total}
                       </span>
                     )}
                   </div>
                 </div>
-                <ChevronRight size={20} className={`${c.text} shrink-0`} />
+                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
               </motion.button>
             );
           })}
-        </div>
-
-        <div className={`mt-5 glass-card p-4 border ${c.border}`}>
-          <div className="flex items-start gap-3">
-            <Lightbulb className={`${c.text} shrink-0 mt-0.5`} size={20} />
-            <div>
-              <h3 className="font-bold text-sm mb-1">Tips Belajar</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Kerjakan soal secara bertahap dan pahami pembahasannya agar lebih mudah menguasai Nahwu.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     );

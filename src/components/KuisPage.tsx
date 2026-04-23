@@ -40,12 +40,11 @@ const COLOR_MAP: Record<JilidColor, {
 /** Render question with ____ highlighted as a yellow inline pill */
 function QuestionText({ text }: { text: string }) {
   const parts = text.split(/(____+)/g);
-  // Heuristic: kalau ada huruf arab dominan, RTL; kalau campuran instruksi Indonesia, biarkan auto.
   const isMostlyArabic = (text.match(/[\u0600-\u06FF]/g) || []).length > 8;
   return (
     <p
       dir={isMostlyArabic ? "rtl" : "auto"}
-      className={`font-arabic text-2xl leading-loose text-foreground ${isMostlyArabic ? "text-right" : "text-right"}`}
+      className="font-arabic text-[22px] sm:text-2xl font-medium leading-[1.6] text-foreground text-center"
     >
       {parts.map((p, i) =>
         /^_+$/.test(p) ? (
@@ -194,17 +193,17 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
           {activeJilid.title} • Bab {activeBab.number} — {activeBab.title}
         </p>
 
-        <div className="glass-card p-5 mb-4">
+        <div className="glass-card px-5 py-6 sm:py-8 mb-5 flex items-center justify-center min-h-[140px]">
           <QuestionText text={soal.soal} />
         </div>
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {LETTERS.map((letter) => {
             const opt = soal.pilihan[letter];
             let cls =
-              "w-full text-right p-4 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 ";
+              "w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ";
             if (showFeedback) {
-              if (letter === soal.jawaban) cls += `${c.border} ${c.bgSoft} ${c.text} `;
+              if (letter === soal.jawaban) cls += "border-emerald-500 bg-emerald-500/15 text-emerald-400 ";
               else if (letter === picked) cls += "border-destructive bg-destructive/15 text-destructive ";
               else cls += "border-border bg-muted/30 text-muted-foreground opacity-60 ";
             } else if (picked === letter) {
@@ -220,9 +219,11 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                 className={cls}
                 whileTap={{ scale: showFeedback ? 1 : 0.98 }}
               >
-                <span className="font-arabic text-xl flex-1 text-right" dir="rtl">{opt}</span>
                 <span className="w-9 h-9 shrink-0 rounded-full border-2 border-current flex items-center justify-center font-bold text-sm">
                   {letter}
+                </span>
+                <span className="font-arabic text-lg sm:text-xl flex-1 text-left leading-snug" dir="auto">
+                  {opt}
                 </span>
               </motion.button>
             );

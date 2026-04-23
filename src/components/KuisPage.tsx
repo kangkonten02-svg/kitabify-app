@@ -40,12 +40,11 @@ const COLOR_MAP: Record<JilidColor, {
 /** Render question with ____ highlighted as a yellow inline pill */
 function QuestionText({ text }: { text: string }) {
   const parts = text.split(/(____+)/g);
-  // Heuristic: kalau ada huruf arab dominan, RTL; kalau campuran instruksi Indonesia, biarkan auto.
   const isMostlyArabic = (text.match(/[\u0600-\u06FF]/g) || []).length > 8;
   return (
     <p
       dir={isMostlyArabic ? "rtl" : "auto"}
-      className={`font-arabic text-2xl leading-loose text-foreground ${isMostlyArabic ? "text-right" : "text-right"}`}
+      className="font-arabic text-[22px] sm:text-2xl font-medium leading-[1.6] text-foreground text-center"
     >
       {parts.map((p, i) =>
         /^_+$/.test(p) ? (

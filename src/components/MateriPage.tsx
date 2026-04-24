@@ -9,7 +9,16 @@ import { SAFINAH_CONTENT } from "@/lib/safinahContent";
 import { getUser, saveUser, addExp } from "@/lib/store";
 import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones } from "lucide-react";
 import { ClickableItem } from "./InteractivePopup";
-import { getPrevBab, getNextBab, hasQuiz, setPendingQuiz, consumePendingMateri } from "@/lib/babNavigation";
+import {
+  getPrevBab,
+  getNextBab,
+  hasQuiz,
+  setPendingQuiz,
+  consumePendingMateri,
+  hasPassedQuiz,
+  getBestQuizScore,
+  QUIZ_PASS_THRESHOLD,
+} from "@/lib/babNavigation";
 
 // All rich content combined
 const ALL_RICH_CONTENT: RichBab[] = [

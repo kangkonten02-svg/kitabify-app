@@ -187,7 +187,8 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   };
 
   const startQuiz = (bab: NahwuBab) => {
-    setActiveBab(bab);
+    // Randomize question order AND options each time the quiz starts.
+    setActiveBab(randomizeBab(bab));
     setCurrentQ(0);
     setPicked(null);
     setShowFeedback(false);

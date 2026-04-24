@@ -173,6 +173,18 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     setPhase("quiz");
   };
 
+  // Consume pending materi → auto-launch the matching nahwu bab quiz.
+  useEffect(() => {
+    const pending = consumePendingQuiz();
+    if (!pending) return;
+    const match = findNahwuBabByMateriId(pending.babId);
+    if (!match) return;
+    setMateriLoc(pending);
+    setActiveJilid(match.jilid);
+    startQuiz(match.bab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handlePick = (letter: Letter) => {
     if (showFeedback || !activeBab) return;
     stopTimer();
@@ -204,6 +216,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     if (u) {
       u.quizScores[activeBab.id] = Math.max(u.quizScores[activeBab.id] || 0, finalScore);
       saveUser(u);
+    }
+    // Record pass-status keyed by materi babId so MateriPage can gate progression.
+    if (materiLoc) {
+      recordQuizScore(materiLoc.babId, finalScore);
     }
     try {
       const hist = JSON.parse(localStorage.getItem("kitabify_quiz_history") || "[]");

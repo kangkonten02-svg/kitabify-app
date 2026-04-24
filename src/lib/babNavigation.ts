@@ -1,6 +1,7 @@
 // Helpers for navigating between Babs across Jilids inside Amtsilati materi.
 import { MATERI_DATA } from "./materiData";
 import { ALL_AUDIO_QUIZZES } from "./audioQuizData";
+import { JILID_LIST, type NahwuJilid, type NahwuBab } from "./nahwuQuizData";
 
 export interface BabLocation {
   kitabId: string;
@@ -49,8 +50,62 @@ export function getNextBab(loc: BabLocation): FlatBab | null {
 }
 
 export function hasQuiz(jilidId: string, babId: string): boolean {
-  return ALL_AUDIO_QUIZZES.some((q) => q.jilidId === jilidId && q.babId === babId);
+  // A bab has a quiz if either an audio quiz exists OR a Nahwu (text) quiz can be matched.
+  if (ALL_AUDIO_QUIZZES.some((q) => q.jilidId === jilidId && q.babId === babId)) return true;
+  return findNahwuBabByMateriId(babId) !== null;
 }
+
+/** Map a Materi babId (e.g. "huruf_jar", "j3_mubtada") to the Nahwu quiz bab. */
+export function findNahwuBabByMateriId(
+  materiBabId: string
+): { jilid: NahwuJilid; bab: NahwuBab } | null {
+  // Strip optional "j{n}_" prefix from materi id so we match by topic suffix.
+  const normalized = materiBabId.replace(/^j\d+_/, "");
+  for (const jilid of JILID_LIST) {
+    for (const bab of jilid.babs) {
+      // Nahwu ids look like "j1_b1_huruf_jar" — match by ending with the materi suffix.
+      if (bab.id.endsWith(`_${normalized}`) || bab.id === materiBabId) {
+        return { jilid, bab };
+      }
+    }
+  }
+  return null;
+}
+
+// =================== Quiz pass-gate storage ===================
+const PASS_KEY = "kitabify_quiz_pass"; // { [materiBabId]: bestScore }
+const PASS_THRESHOLD = 6; // out of 10 — minimum to unlock next bab
+const PERFECT_SCORE = 10;
+
+function readPassMap(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(PASS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function recordQuizScore(materiBabId: string, score: number) {
+  const map = readPassMap();
+  map[materiBabId] = Math.max(map[materiBabId] || 0, score);
+  localStorage.setItem(PASS_KEY, JSON.stringify(map));
+  window.dispatchEvent(new Event("storage"));
+}
+
+export function getBestQuizScore(materiBabId: string): number {
+  return readPassMap()[materiBabId] || 0;
+}
+
+export function hasPassedQuiz(materiBabId: string): boolean {
+  return getBestQuizScore(materiBabId) >= PASS_THRESHOLD;
+}
+
+export function hasPerfectQuiz(materiBabId: string): boolean {
+  return getBestQuizScore(materiBabId) >= PERFECT_SCORE;
+}
+
+export const QUIZ_PASS_THRESHOLD = PASS_THRESHOLD;
+export const QUIZ_PERFECT_SCORE = PERFECT_SCORE;
 
 // SessionStorage keys for cross-page navigation hints
 const PENDING_QUIZ_KEY = "kitabify_pending_quiz";

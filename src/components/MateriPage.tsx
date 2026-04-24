@@ -314,6 +314,8 @@ const RichContentViewer = ({
   const prev = getPrevBab({ kitabId, jilidId, babId });
   const next = getNextBab({ kitabId, jilidId, babId });
   const quizAvailable = hasQuiz(jilidId, babId);
+  const passedThisBab = hasPassedQuiz(babId);
+  const bestScore = getBestQuizScore(babId);
 
   const markAsRead = () => {
     if (!user || marked) return;
@@ -413,12 +415,27 @@ const RichContentViewer = ({
             {quizAvailable ? <><Headphones size={16} /> Kerjakan Kuis</> : <>Next <ArrowRight size={16} /></>}
           </button>
         </div>
-        {quizAvailable && next && (
+        {quizAvailable && (
+          <div
+            className={`px-3 py-2.5 rounded-xl text-xs text-center ${
+              passedThisBab
+                ? "bg-primary/10 text-primary"
+                : "bg-muted/40 text-muted-foreground"
+            }`}
+          >
+            {passedThisBab ? (
+              <>✓ Kuis lulus ({bestScore}/10) — bab berikutnya terbuka</>
+            ) : (
+              <>🔒 Selesaikan kuis dengan skor minimal {QUIZ_PASS_THRESHOLD}/10 untuk membuka bab berikutnya</>
+            )}
+          </div>
+        )}
+        {quizAvailable && passedThisBab && next && (
           <button
             onClick={() => onSelectBab({ kitabId: next.kitabId, jilidId: next.jilidId, babId: next.babId })}
             className="w-full py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition flex items-center justify-center gap-1.5"
           >
-            Lewati kuis, lanjut ke bab berikutnya <ArrowRight size={14} />
+            Lanjut ke bab berikutnya <ArrowRight size={14} />
           </button>
         )}
       </div>

@@ -10,8 +10,18 @@ import {
 import { addExp, getUser, saveUser } from "@/lib/store";
 import {
   CheckCircle, XCircle, Trophy, RotateCcw, ArrowLeft, ArrowRight,
-  BookOpen, Sparkles, Gift, ChevronRight, Timer,
+  BookOpen, Sparkles, Gift, ChevronRight, Timer, Lock,
 } from "lucide-react";
+import {
+  consumePendingQuiz,
+  findNahwuBabByMateriId,
+  recordQuizScore,
+  setPendingMateri,
+  getNextBab,
+  QUIZ_PASS_THRESHOLD,
+  QUIZ_PERFECT_SCORE,
+  type BabLocation,
+} from "@/lib/babNavigation";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
 type Letter = "A" | "B" | "C" | "D";
@@ -81,6 +91,9 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [bonusExp, setBonusExp] = useState(0);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // When the user arrives here from a Materi bab, remember its location so
+  // we can route them back to the *next* materi bab on a passing score.
+  const [materiLoc, setMateriLoc] = useState<BabLocation | null>(null);
 
   // ============ Timer logic ============
   const stopTimer = () => {

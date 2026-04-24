@@ -168,6 +168,41 @@
   }
 
   /* ============================
+     ARABIC TEXT — RTL helper
+     ============================ */
+  .arabic-text {
+    font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.8;
+    display: inline-block;
+    vertical-align: middle;
+    unicode-bidi: isolate;
+  }
+
+  /* ============================
+     QUESTION BOX — focused, centered
+     ============================ */
+  .question-box {
+    @apply rounded-2xl border backdrop-blur-xl;
+    background: hsla(var(--glass));
+    border-color: hsla(var(--glass-border));
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    padding: 1.75rem 1.25rem;
+    line-height: 1.7;
+  }
+
+  /* Pulse animation for low-time timer */
+  @keyframes timer-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
+  .timer-pulse {
+    animation: timer-pulse 0.8s ease-in-out infinite;
+  }
+
+  /* ============================
      PROGRESS BAR — adaptive glow
      ============================ */
   .progress-bar-fill {

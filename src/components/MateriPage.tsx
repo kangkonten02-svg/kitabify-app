@@ -7,7 +7,7 @@ import { JILID3_CONTENT } from "@/lib/jilid3Content";
 import { JURUMIYAH_CONTENT } from "@/lib/jurumiyahContent";
 import { SAFINAH_CONTENT } from "@/lib/safinahContent";
 import { getUser, saveUser, addExp } from "@/lib/store";
-import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones } from "lucide-react";
+import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones, Lock } from "lucide-react";
 import { ClickableItem } from "./InteractivePopup";
 import {
   getPrevBab,

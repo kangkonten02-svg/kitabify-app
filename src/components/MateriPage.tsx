@@ -7,9 +7,18 @@ import { JILID3_CONTENT } from "@/lib/jilid3Content";
 import { JURUMIYAH_CONTENT } from "@/lib/jurumiyahContent";
 import { SAFINAH_CONTENT } from "@/lib/safinahContent";
 import { getUser, saveUser, addExp } from "@/lib/store";
-import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones } from "lucide-react";
+import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones, Lock } from "lucide-react";
 import { ClickableItem } from "./InteractivePopup";
-import { getPrevBab, getNextBab, hasQuiz, setPendingQuiz, consumePendingMateri } from "@/lib/babNavigation";
+import {
+  getPrevBab,
+  getNextBab,
+  hasQuiz,
+  setPendingQuiz,
+  consumePendingMateri,
+  hasPassedQuiz,
+  getBestQuizScore,
+  QUIZ_PASS_THRESHOLD,
+} from "@/lib/babNavigation";
 
 // All rich content combined
 const ALL_RICH_CONTENT: RichBab[] = [
@@ -305,6 +314,8 @@ const RichContentViewer = ({
   const prev = getPrevBab({ kitabId, jilidId, babId });
   const next = getNextBab({ kitabId, jilidId, babId });
   const quizAvailable = hasQuiz(jilidId, babId);
+  const passedThisBab = hasPassedQuiz(babId);
+  const bestScore = getBestQuizScore(babId);
 
   const markAsRead = () => {
     if (!user || marked) return;
@@ -404,12 +415,27 @@ const RichContentViewer = ({
             {quizAvailable ? <><Headphones size={16} /> Kerjakan Kuis</> : <>Next <ArrowRight size={16} /></>}
           </button>
         </div>
-        {quizAvailable && next && (
+        {quizAvailable && (
+          <div
+            className={`px-3 py-2.5 rounded-xl text-xs text-center ${
+              passedThisBab
+                ? "bg-primary/10 text-primary"
+                : "bg-muted/40 text-muted-foreground"
+            }`}
+          >
+            {passedThisBab ? (
+              <>✓ Kuis lulus ({bestScore}/10) — bab berikutnya terbuka</>
+            ) : (
+              <>🔒 Selesaikan kuis dengan skor minimal {QUIZ_PASS_THRESHOLD}/10 untuk membuka bab berikutnya</>
+            )}
+          </div>
+        )}
+        {quizAvailable && passedThisBab && next && (
           <button
             onClick={() => onSelectBab({ kitabId: next.kitabId, jilidId: next.jilidId, babId: next.babId })}
             className="w-full py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition flex items-center justify-center gap-1.5"
           >
-            Lewati kuis, lanjut ke bab berikutnya <ArrowRight size={14} />
+            Lanjut ke bab berikutnya <ArrowRight size={14} />
           </button>
         )}
       </div>
@@ -883,16 +909,31 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
                               className="overflow-hidden"
                             >
                               <div className="pl-4 py-2 space-y-1">
-                                {jilid.babs.map((b) => {
+                                {jilid.babs.map((b, babIdx) => {
                                   const done = user?.materiProgress[b.id] === 100;
                                   const hasRich = ALL_RICH_CONTENT.some((rc) => rc.id === b.id);
+                                  // Determine prev bab in this jilid; lock if prev has a quiz not yet passed.
+                                  const prevB = babIdx > 0 ? jilid.babs[babIdx - 1] : null;
+                                  const prevQuiz = prevB ? hasQuiz(jilid.id, prevB.id) : false;
+                                  const locked =
+                                    prevB && prevQuiz && !hasPassedQuiz(prevB.id);
                                   return (
                                     <button
                                       key={b.id}
-                                      onClick={() => setSelectedBab({ kitabId: kitab.id, jilidId: jilid.id, babId: b.id })}
-                                      className="w-full flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition text-left"
+                                      onClick={() => {
+                                        if (locked) return;
+                                        setSelectedBab({ kitabId: kitab.id, jilidId: jilid.id, babId: b.id });
+                                      }}
+                                      disabled={!!locked}
+                                      className={`w-full flex items-center gap-3 py-2.5 px-3 rounded-lg transition text-left ${
+                                        locked
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : "hover:bg-muted/50"
+                                      }`}
                                     >
-                                      {done ? (
+                                      {locked ? (
+                                        <Lock size={16} className="text-muted-foreground flex-shrink-0" />
+                                      ) : done ? (
                                         <CheckCircle size={16} className="text-primary flex-shrink-0" />
                                       ) : (
                                         <BookOpen size={16} className="text-muted-foreground flex-shrink-0" />
@@ -900,7 +941,12 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
                                       <span className={`text-sm flex-1 ${done ? "text-primary font-medium" : "text-foreground"}`}>
                                         {b.title}
                                       </span>
-                                      {hasRich && (
+                                      {locked && (
+                                        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-semibold">
+                                          Terkunci
+                                        </span>
+                                      )}
+                                      {!locked && hasRich && (
                                         <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">
                                           Lengkap
                                         </span>

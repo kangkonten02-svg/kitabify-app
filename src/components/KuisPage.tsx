@@ -10,8 +10,18 @@ import {
 import { addExp, getUser, saveUser } from "@/lib/store";
 import {
   CheckCircle, XCircle, Trophy, RotateCcw, ArrowLeft, ArrowRight,
-  BookOpen, Sparkles, Gift, ChevronRight, Timer,
+  BookOpen, Sparkles, Gift, ChevronRight, Timer, Lock,
 } from "lucide-react";
+import {
+  consumePendingQuiz,
+  findNahwuBabByMateriId,
+  recordQuizScore,
+  setPendingMateri,
+  getNextBab,
+  QUIZ_PASS_THRESHOLD,
+  QUIZ_PERFECT_SCORE,
+  type BabLocation,
+} from "@/lib/babNavigation";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
 type Letter = "A" | "B" | "C" | "D";
@@ -81,6 +91,9 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [bonusExp, setBonusExp] = useState(0);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // When the user arrives here from a Materi bab, remember its location so
+  // we can route them back to the *next* materi bab on a passing score.
+  const [materiLoc, setMateriLoc] = useState<BabLocation | null>(null);
 
   // ============ Timer logic ============
   const stopTimer = () => {
@@ -160,6 +173,18 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     setPhase("quiz");
   };
 
+  // Consume pending materi → auto-launch the matching nahwu bab quiz.
+  useEffect(() => {
+    const pending = consumePendingQuiz();
+    if (!pending) return;
+    const match = findNahwuBabByMateriId(pending.babId);
+    if (!match) return;
+    setMateriLoc(pending);
+    setActiveJilid(match.jilid);
+    startQuiz(match.bab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handlePick = (letter: Letter) => {
     if (showFeedback || !activeBab) return;
     stopTimer();
@@ -191,6 +216,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     if (u) {
       u.quizScores[activeBab.id] = Math.max(u.quizScores[activeBab.id] || 0, finalScore);
       saveUser(u);
+    }
+    // Record pass-status keyed by materi babId so MateriPage can gate progression.
+    if (materiLoc) {
+      recordQuizScore(materiLoc.babId, finalScore);
     }
     try {
       const hist = JSON.parse(localStorage.getItem("kitabify_quiz_history") || "[]");
@@ -468,28 +497,89 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <button
-            onClick={() => startQuiz(activeBab)}
-            className={`w-full py-3 rounded-xl ${c.bg} text-white font-bold text-sm flex items-center justify-center gap-2`}
-          >
-            <RotateCcw size={16} /> Ulangi Kuis
-          </button>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => onGoMateri?.()}
-              className="py-3 rounded-xl bg-muted text-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
-            >
-              <BookOpen size={14} /> Materi
-            </button>
-            <button
-              onClick={backToBab}
-              className="py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
-            >
-              Daftar Bab <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
+        {/* ============ Gating CTA (Materi → Quiz → Next Bab) ============ */}
+        {(() => {
+          const passed = score >= QUIZ_PASS_THRESHOLD;
+          const perfect = score >= QUIZ_PERFECT_SCORE;
+          const nextMateri = materiLoc ? getNextBab(materiLoc) : null;
+
+          // Gating banner
+          const banner = !materiLoc ? null : passed ? (
+            <div className={`p-4 rounded-2xl border-2 ${c.border} ${c.bgSoft} mb-3`}>
+              <p className={`font-bold ${c.text} flex items-center gap-2 mb-1`}>
+                <CheckCircle size={18} />
+                {perfect ? "Sempurna! 10/10 🌟" : `Lulus! ${score}/10 ✓`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {perfect
+                  ? "Kamu menguasai bab ini. Lanjut ke bab berikutnya."
+                  : `Skor cukup untuk membuka bab berikutnya (minimal ${QUIZ_PASS_THRESHOLD}/10).`}
+              </p>
+            </div>
+          ) : (
+            <div className="p-4 rounded-2xl border-2 border-destructive/40 bg-destructive/10 mb-3">
+              <p className="font-bold text-destructive flex items-center gap-2 mb-1">
+                <Lock size={18} /> Belum Lulus ({score}/10)
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Bab berikutnya terkunci. Capai minimal{" "}
+                <strong>{QUIZ_PASS_THRESHOLD}/10</strong> untuk membukanya. Coba ulangi
+                kuis ini.
+              </p>
+            </div>
+          );
+
+          return (
+            <div className="space-y-2">
+              {banner}
+
+              {materiLoc && passed && nextMateri ? (
+                <button
+                  onClick={() => {
+                    setPendingMateri({
+                      kitabId: nextMateri.kitabId,
+                      jilidId: nextMateri.jilidId,
+                      babId: nextMateri.babId,
+                    });
+                    onGoMateri?.();
+                  }}
+                  className={`w-full py-3.5 rounded-xl ${c.bg} text-white font-bold text-sm flex items-center justify-center gap-2`}
+                >
+                  Lanjut ke {nextMateri.babTitle} <ArrowRight size={16} />
+                </button>
+              ) : null}
+
+              <button
+                onClick={() => startQuiz(activeBab)}
+                className={`w-full py-3 rounded-xl ${
+                  materiLoc && !passed ? c.bg + " text-white" : "bg-muted text-foreground"
+                } font-bold text-sm flex items-center justify-center gap-2`}
+              >
+                <RotateCcw size={16} /> Ulangi Kuis
+              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    if (materiLoc) {
+                      setPendingMateri(materiLoc);
+                    }
+                    onGoMateri?.();
+                  }}
+                  className="py-3 rounded-xl bg-muted text-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
+                >
+                  <BookOpen size={14} /> Materi
+                </button>
+                <button
+                  onClick={backToBab}
+                  className="py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
+                >
+                  Daftar Bab <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }

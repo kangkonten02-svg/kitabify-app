@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   JILID_LIST,
@@ -10,7 +10,7 @@ import {
 import { addExp, getUser, saveUser } from "@/lib/store";
 import {
   CheckCircle, XCircle, Trophy, RotateCcw, ArrowLeft, ArrowRight,
-  BookOpen, Sparkles, Gift, ChevronRight,
+  BookOpen, Sparkles, Gift, ChevronRight, Timer,
 } from "lucide-react";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
@@ -27,6 +27,7 @@ interface KuisPageProps {
 }
 
 const LETTERS: Letter[] = ["A", "B", "C", "D"];
+const QUESTION_TIME = 20; // seconds per question
 
 // =================== Color helpers per Jilid ===================
 const COLOR_MAP: Record<JilidColor, {
@@ -44,7 +45,8 @@ function QuestionText({ text }: { text: string }) {
   return (
     <p
       dir={isMostlyArabic ? "rtl" : "auto"}
-      className="font-arabic text-[22px] sm:text-2xl font-medium leading-[1.6] text-foreground text-center"
+      className={`text-[22px] sm:text-2xl font-medium leading-[1.8] text-foreground text-center ${isMostlyArabic ? "arabic-text w-full" : ""}`}
+      style={isMostlyArabic ? { textAlign: "center" } : undefined}
     >
       {parts.map((p, i) =>
         /^_+$/.test(p) ? (
@@ -62,6 +64,11 @@ function QuestionText({ text }: { text: string }) {
   );
 }
 
+/** Detect if a string is mostly Arabic */
+function isArabic(text: string): boolean {
+  return (text.match(/[\u0600-\u06FF]/g) || []).length > 2;
+}
+
 const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [phase, setPhase] = useState<Phase>("jilid");
   const [activeJilid, setActiveJilid] = useState<NahwuJilid | null>(null);
@@ -72,6 +79,51 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [logs, setLogs] = useState<AnswerLog[]>([]);
   const [bonusOpened, setBonusOpened] = useState(false);
   const [bonusExp, setBonusExp] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ============ Timer logic ============
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const startTimer = () => {
+    stopTimer();
+    setTimeLeft(QUESTION_TIME);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          stopTimer();
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+  };
+
+  // Start timer when entering quiz phase or moving to next question
+  useEffect(() => {
+    if (phase === "quiz" && !showFeedback) {
+      startTimer();
+    }
+    return () => stopTimer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, currentQ]);
+
+  // Handle time up — auto mark wrong & show feedback
+  useEffect(() => {
+    if (phase !== "quiz" || showFeedback || !activeBab) return;
+    if (timeLeft === 0) {
+      stopTimer();
+      const soal = activeBab.soal[currentQ];
+      setPicked(null);
+      setLogs((prev) => [...prev, { soal, picked: null, correct: false }]);
+      setShowFeedback(true);
+    }
+  }, [timeLeft, phase, showFeedback, activeBab, currentQ]);
 
   const user = getUser();
   const bestScores: Record<string, number> = useMemo(
@@ -104,11 +156,13 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     setLogs([]);
     setBonusOpened(false);
     setBonusExp(0);
+    setTimeLeft(QUESTION_TIME);
     setPhase("quiz");
   };
 
   const handlePick = (letter: Letter) => {
     if (showFeedback || !activeBab) return;
+    stopTimer();
     const soal = activeBab.soal[currentQ];
     const correct = soal.jawaban === letter;
     setPicked(letter);
@@ -166,6 +220,15 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     const total = activeBab.soal.length;
     const progressPct = ((currentQ + (showFeedback ? 1 : 0)) / total) * 100;
     const isCorrect = picked === soal.jawaban;
+    const timedOut = !showFeedback ? false : picked === null;
+
+    // Timer color
+    const timerColor =
+      timeLeft <= 5 ? "text-destructive" : timeLeft <= 10 ? "text-yellow-400" : "text-emerald-400";
+    const timerBg =
+      timeLeft <= 5 ? "bg-destructive/15 border-destructive/40"
+      : timeLeft <= 10 ? "bg-yellow-500/15 border-yellow-500/40"
+      : "bg-emerald-500/15 border-emerald-500/40";
 
     return (
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -189,19 +252,30 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
         </div>
         <p className="text-[10px] text-right text-muted-foreground mb-4">{Math.round(progressPct)}%</p>
 
-        <p className="text-xs text-muted-foreground mb-2 font-semibold">
-          {activeJilid.title} • Bab {activeBab.number} — {activeBab.title}
-        </p>
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <p className="text-xs text-muted-foreground font-semibold truncate">
+            {activeJilid.title} • Bab {activeBab.number} — {activeBab.title}
+          </p>
+          <div
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 ${timerBg} ${timerColor} font-bold text-xs shrink-0 ${
+              !showFeedback && timeLeft <= 5 ? "timer-pulse" : ""
+            }`}
+          >
+            <Timer size={14} />
+            <span>{showFeedback ? "—" : `${timeLeft}s`}</span>
+          </div>
+        </div>
 
-        <div className="glass-card px-5 py-6 sm:py-8 mb-5 flex items-center justify-center min-h-[140px]">
+        <div className="question-box mb-5 flex items-center justify-center min-h-[140px]">
           <QuestionText text={soal.soal} />
         </div>
 
         <div className="flex flex-col gap-3">
           {LETTERS.map((letter) => {
             const opt = soal.pilihan[letter];
+            const optIsArabic = isArabic(opt);
             let cls =
-              "w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ";
+              "w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-3 hover:bg-muted/40 ";
             if (showFeedback) {
               if (letter === soal.jawaban) cls += "border-emerald-500 bg-emerald-500/15 text-emerald-400 ";
               else if (letter === picked) cls += "border-destructive bg-destructive/15 text-destructive ";
@@ -222,8 +296,12 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                 <span className="w-9 h-9 shrink-0 rounded-full border-2 border-current flex items-center justify-center font-bold text-sm">
                   {letter}
                 </span>
-                <span className="font-arabic text-lg sm:text-xl flex-1 text-left leading-snug" dir="auto">
-                  {opt}
+                <span className="flex-1 text-left">
+                  {optIsArabic ? (
+                    <span className="arabic-text text-lg sm:text-xl" dir="rtl">{opt}</span>
+                  ) : (
+                    <span className="text-base sm:text-lg leading-snug">{opt}</span>
+                  )}
                 </span>
               </motion.button>
             );
@@ -245,6 +323,11 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                     <CheckCircle className={c.text} size={20} />
                     <span className={`font-bold ${c.text}`}>Benar! ✅</span>
                   </>
+                ) : timedOut ? (
+                  <>
+                    <Timer className="text-destructive" size={20} />
+                    <span className="font-bold text-destructive">Waktu Habis ⏰</span>
+                  </>
                 ) : (
                   <>
                     <XCircle className="text-destructive" size={20} />
@@ -255,12 +338,14 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
               {!isCorrect && (
                 <p className="text-sm mb-1.5">
                   Jawaban benar:{" "}
-                  <strong className={`font-arabic text-lg ${c.text}`}>
+                  <strong className={`arabic-text text-lg ${c.text}`} dir="rtl">
                     {soal.jawaban}. {soal.pilihan[soal.jawaban]}
                   </strong>
                 </p>
               )}
-              <p className="text-sm text-muted-foreground leading-relaxed">{soal.pembahasan}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {soal.pembahasan?.trim() ? soal.pembahasan : "Penjelasan belum tersedia"}
+              </p>
               <button
                 onClick={() => goNext()}
                 className={`mt-3 w-full py-3 rounded-xl ${c.bg} text-white font-bold text-sm`}
@@ -358,7 +443,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                     <XCircle className="text-destructive shrink-0" size={16} />
                   )}
                 </div>
-                <div className="font-arabic text-base mb-1.5 text-right" dir="rtl">
+                <div className="arabic-text text-base mb-1.5 w-full" dir="rtl">
                   {log.soal.soal.replace(/____+/g, "ـــــ")}
                 </div>
                 {!log.correct && (
@@ -371,11 +456,13 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                 )}
                 <p className="text-xs">
                   <span className="text-muted-foreground">Benar: </span>
-                  <span className={`${c.text} font-bold font-arabic`}>
+                  <span className={`${c.text} font-bold arabic-text`} dir="rtl">
                     {log.soal.jawaban}. {log.soal.pilihan[log.soal.jawaban]}
                   </span>
                 </p>
-                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{log.soal.pembahasan}</p>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  {log.soal.pembahasan?.trim() ? log.soal.pembahasan : "Penjelasan belum tersedia"}
+                </p>
               </div>
             ))}
           </div>

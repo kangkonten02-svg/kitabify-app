@@ -39,6 +39,31 @@ interface KuisPageProps {
 const LETTERS: Letter[] = ["A", "B", "C", "D"];
 const QUESTION_TIME = 20; // seconds per question
 
+// ============ Shuffle helpers (dynamic question + answer order) ============
+function shuffle<T>(arr: T[]): T[] {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Shuffle a single soal's options and remap the correct answer letter. */
+function shuffleSoal(soal: NahwuSoal): NahwuSoal {
+  const correctValue = soal.pilihan[soal.jawaban];
+  const values = LETTERS.map((l) => soal.pilihan[l]);
+  const shuffled = shuffle(values);
+  const newPilihan = { A: shuffled[0], B: shuffled[1], C: shuffled[2], D: shuffled[3] };
+  const newJawaban = (LETTERS.find((l) => newPilihan[l] === correctValue) ?? "A") as Letter;
+  return { ...soal, pilihan: newPilihan, jawaban: newJawaban };
+}
+
+/** Return a new bab with its soal order shuffled and each soal's options shuffled. */
+function randomizeBab(bab: NahwuBab): NahwuBab {
+  return { ...bab, soal: shuffle(bab.soal).map(shuffleSoal) };
+}
+
 // =================== Color helpers per Jilid ===================
 const COLOR_MAP: Record<JilidColor, {
   text: string; bg: string; bgSoft: string; border: string; ring: string; gradFrom: string; gradTo: string;

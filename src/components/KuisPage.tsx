@@ -573,36 +573,44 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
                 >
                   Lanjut ke {nextMateri.babTitle} <ArrowRight size={16} />
                 </button>
+              ) : materiLoc && !passed ? (
+                <button
+                  onClick={() => {
+                    setPendingMateri(materiLoc);
+                    onGoMateri?.();
+                  }}
+                  className={`w-full py-3.5 rounded-xl ${c.bg} text-white font-bold text-sm flex items-center justify-center gap-2`}
+                >
+                  <BookOpen size={16} /> Kembali ke Materi & Pelajari Ulang
+                </button>
               ) : null}
 
               <button
                 onClick={() => startQuiz(activeBab)}
-                className={`w-full py-3 rounded-xl ${
-                  materiLoc && !passed ? c.bg + " text-white" : "bg-muted text-foreground"
-                } font-bold text-sm flex items-center justify-center gap-2`}
+                className="w-full py-3 rounded-xl bg-muted text-foreground font-bold text-sm flex items-center justify-center gap-2"
               >
                 <RotateCcw size={16} /> Ulangi Kuis
               </button>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    if (materiLoc) {
-                      setPendingMateri(materiLoc);
-                    }
-                    onGoMateri?.();
-                  }}
-                  className="py-3 rounded-xl bg-muted text-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
-                >
-                  <BookOpen size={14} /> Materi
-                </button>
-                <button
-                  onClick={backToBab}
-                  className="py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
-                >
-                  Daftar Bab <ArrowRight size={14} />
-                </button>
-              </div>
+              {passed && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      if (materiLoc) setPendingMateri(materiLoc);
+                      onGoMateri?.();
+                    }}
+                    className="py-3 rounded-xl bg-muted text-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
+                  >
+                    <BookOpen size={14} /> Materi
+                  </button>
+                  <button
+                    onClick={backToBab}
+                    className="py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
+                  >
+                    Daftar Bab <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           );
         })()}

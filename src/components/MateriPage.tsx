@@ -336,6 +336,19 @@ const RichContentViewer = ({
     }
   };
 
+  const handleSkipToNext = () => {
+    if (!marked) markAsRead();
+    if (next) {
+      onSelectBab({ kitabId: next.kitabId, jilidId: next.jilidId, babId: next.babId });
+    }
+  };
+
+  const handleStartQuiz = () => {
+    if (!marked) markAsRead();
+    setPendingQuiz({ kitabId, jilidId, babId });
+    onGoKuis();
+  };
+
   const handlePrev = () => {
     if (prev) onSelectBab({ kitabId: prev.kitabId, jilidId: prev.jilidId, babId: prev.babId });
   };
@@ -415,6 +428,14 @@ const RichContentViewer = ({
             {quizAvailable ? <><Headphones size={16} /> Kerjakan Kuis</> : <>Next <ArrowRight size={16} /></>}
           </button>
         </div>
+        {quizAvailable && next && (
+          <button
+            onClick={handleSkipToNext}
+            className="w-full py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition flex items-center justify-center gap-1.5 border border-dashed border-muted-foreground/30"
+          >
+            Lompati soal & lanjut ke {next.babTitle} <ArrowRight size={14} />
+          </button>
+        )}
         {quizAvailable && (
           <div
             className={`px-3 py-2.5 rounded-xl text-xs text-center ${

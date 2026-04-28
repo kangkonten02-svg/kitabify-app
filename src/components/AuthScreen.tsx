@@ -9,6 +9,21 @@ interface AuthScreenProps {
   onAuth: () => void;
 }
 
+// Always use a stable public URL for email confirmation links so users
+// never get redirected to localhost (which happens when window.location
+// is the dev sandbox or when the email is opened on another device).
+const getRedirectUrl = (): string => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const isLocal =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host.endsWith(".local");
+    if (!isLocal) return window.location.origin;
+  }
+  return "https://kitabify-app.lovable.app";
+};
+
 const AuthScreen = ({ onAuth }: AuthScreenProps) => {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({

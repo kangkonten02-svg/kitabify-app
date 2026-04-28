@@ -74,7 +74,7 @@ export function findNahwuBabByMateriId(
 
 // =================== Quiz pass-gate storage ===================
 const PASS_KEY = "kitabify_quiz_pass"; // { [materiBabId]: bestScore }
-const PASS_THRESHOLD = 6; // out of 10 — minimum to unlock next bab
+const PASS_THRESHOLD = 7; // out of 10 — minimum to unlock next bab (must be ≥7)
 const PERFECT_SCORE = 10;
 
 function readPassMap(): Record<string, number> {

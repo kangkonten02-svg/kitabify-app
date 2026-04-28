@@ -102,7 +102,7 @@ const AuthScreen = ({ onAuth }: AuthScreenProps) => {
           city: form.city || null,
           institution: form.institution || null,
         },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getRedirectUrl(),
       },
     });
 
@@ -136,7 +136,7 @@ const AuthScreen = ({ onAuth }: AuthScreenProps) => {
 
     setLoading(true);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(form.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${getRedirectUrl()}/reset-password`,
     });
     setLoading(false);
 

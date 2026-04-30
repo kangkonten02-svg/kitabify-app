@@ -647,6 +647,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
       user.materiProgress[selectedBab.babId] = 100;
       saveUser(user);
       addExp(15, `Belajar: ${simpleBab.title}`);
+      markBabRead(selectedBab);
       setRefresh((r) => r + 1);
     };
     const goToBab = (loc: { kitabId: string; jilidId: string; babId: string }) => {

@@ -90,6 +90,26 @@ export function recordQuizScore(materiBabId: string, score: number) {
   map[materiBabId] = Math.max(map[materiBabId] || 0, score);
   localStorage.setItem(PASS_KEY, JSON.stringify(map));
   window.dispatchEvent(new Event("storage"));
+  // Also feed the gamified path-progress store. Lazy-import to keep
+  // legacy modules free of new deps.
+  import("./gamification").then((m) => {
+    // We may not know exact kitabId/jilidId here — find it from MATERI_DATA.
+    import("./materiData").then(({ MATERI_DATA }) => {
+      for (const k of MATERI_DATA) {
+        for (const j of k.jilids) {
+          for (const b of j.babs) {
+            if (b.id === materiBabId) {
+              m.recordBabQuizScore(
+                { kitabId: k.id, jilidId: j.id, babId: materiBabId },
+                score,
+              );
+              return;
+            }
+          }
+        }
+      }
+    });
+  }).catch(() => {});
 }
 
 export function getBestQuizScore(materiBabId: string): number {

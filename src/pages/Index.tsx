@@ -12,6 +12,7 @@ import { PopupModalProvider } from "@/components/InteractivePopup";
 import { supabase } from "@/integrations/supabase/client";
 import DailyLoginModal from "@/components/DailyLoginModal";
 import { checkAndClaimDailyLogin, type DailyReward } from "@/lib/dailyLogin";
+import { hydrateFromCloud } from "@/lib/gamification";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ const Index = () => {
   useEffect(() => {
     if (screen !== "app" || dailyChecked.current) return;
     dailyChecked.current = true;
+    // Pull cloud snapshots in background (best-effort, non-blocking).
+    hydrateFromCloud().catch(() => {});
     const result = checkAndClaimDailyLogin();
     if (result.claimed) {
       setDailyReward(result.reward);

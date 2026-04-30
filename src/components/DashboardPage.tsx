@@ -24,13 +24,13 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto space-y-5">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
         <p className="text-muted-foreground text-sm">Assalamualaikum 👋</p>
         <h1 className="text-2xl font-extrabold text-foreground">{user.name}</h1>
       </motion.div>
 
       {/* Level Card */}
-      <motion.div className="glass-card p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <motion.div className="glass-card p-5" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}>
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-xs text-muted-foreground">Level {user.level}</p>
@@ -45,7 +45,7 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
             className="h-full rounded-full progress-bar-fill"
             initial={{ width: 0 }}
             animate={{ width: `${progressPct}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
         <p className="text-xs text-muted-foreground mt-1.5">{current}/{needed} EXP menuju level berikutnya</p>

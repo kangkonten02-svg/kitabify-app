@@ -24,13 +24,13 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto space-y-5">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
         <p className="text-muted-foreground text-sm">Assalamualaikum 👋</p>
         <h1 className="text-2xl font-extrabold text-foreground">{user.name}</h1>
       </motion.div>
 
       {/* Level Card */}
-      <motion.div className="glass-card p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <motion.div className="glass-card p-5" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.05 }}>
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-xs text-muted-foreground">Level {user.level}</p>
@@ -45,7 +45,7 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
             className="h-full rounded-full progress-bar-fill"
             initial={{ width: 0 }}
             animate={{ width: `${progressPct}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
         <p className="text-xs text-muted-foreground mt-1.5">{current}/{needed} EXP menuju level berikutnya</p>
@@ -62,7 +62,7 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
         {/* Last Materi */}
         <motion.div
           className="glass-card p-4 flex flex-col justify-between"
-          initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+          initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
         >
           <BookOpen className="text-primary mb-2" size={20} />
           <p className="text-xs text-muted-foreground">Terakhir dipelajari</p>
@@ -80,7 +80,7 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
         {/* Progress */}
         <motion.div
           className="glass-card p-4 flex flex-col justify-between"
-          initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
+          initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
         >
           <TrendingUp className="text-primary mb-2" size={20} />
           <p className="text-xs text-muted-foreground">Progress Belajar</p>
@@ -94,7 +94,7 @@ const DashboardPage = ({ onGoMateri }: DashboardPageProps) => {
       {/* Streak */}
       <motion.div
         className="glass-card p-4 flex items-center gap-4"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25, delay: 0.15 }}
       >
         <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
           <Flame className="text-orange-400" size={24} />

@@ -10,8 +10,6 @@ import LainnyaPage from "@/components/LainnyaPage";
 import { isLoggedIn, saveUser, getUser, type User } from "@/lib/store";
 import { PopupModalProvider } from "@/components/InteractivePopup";
 import { supabase } from "@/integrations/supabase/client";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/firebase";
 import DailyLoginModal from "@/components/DailyLoginModal";
 import { checkAndClaimDailyLogin, type DailyReward } from "@/lib/dailyLogin";
 
@@ -42,7 +40,16 @@ const Index = () => {
   useEffect(() => {
     if (!visitTracked.current) {
       visitTracked.current = true;
-      addDoc(collection(db, "visits"), { createdAt: new Date().toISOString() }).catch(() => {});
+      // Defer firebase visit logging — non-blocking, after first paint
+      const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1500));
+      idle(() => {
+        Promise.all([
+          import("firebase/firestore"),
+          import("@/firebase"),
+        ]).then(([{ collection, addDoc }, { db }]) => {
+          addDoc(collection(db, "visits"), { createdAt: new Date().toISOString() }).catch(() => {});
+        }).catch(() => {});
+      });
     }
   }, []);
 

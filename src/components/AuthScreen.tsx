@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { saveUser, type User } from "@/lib/store";
 import kitabifyLogo from "@/assets/kitabify-logo-transparent.png";
-import kitabifyBg from "@/assets/kitabify-bg.png";
+import kitabifyBg from "@/assets/kitabify-bg.webp";
 
 interface AuthScreenProps {
   onAuth: () => void;
@@ -147,7 +147,7 @@ const AuthScreen = ({ onAuth }: AuthScreenProps) => {
 
   return (
     <div className="fixed inset-0 flex flex-col items-center overflow-y-auto">
-      <img src={kitabifyBg} alt="" className="fixed inset-0 w-full h-full object-cover" />
+      <img src={kitabifyBg} alt="" decoding="async" className="fixed inset-0 w-full h-full object-cover" />
       <div className="fixed inset-0 bg-background/50" />
 
       <motion.div

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import kitabifyLogo from "@/assets/kitabify-logo-transparent.png";
-import kitabifyBg from "@/assets/kitabify-bg.png";
+import kitabifyBg from "@/assets/kitabify-bg.webp";
 
 const slides = [
   { icon: "📚", title: "Materi Kitab Lengkap", desc: "Belajar kitab kuning secara bertahap dan terstruktur" },
@@ -19,7 +19,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
   const [showSlides, setShowSlides] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowSlides(true), 2000);
+    const t = setTimeout(() => setShowSlides(true), 600);
     return () => clearTimeout(t);
   }, []);
 
@@ -27,13 +27,13 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
     if (!showSlides) return;
     const interval = setInterval(() => {
       setCurrent((p) => (p + 1) % slides.length);
-    }, 3000);
+    }, 2500);
     return () => clearInterval(interval);
   }, [showSlides]);
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden">
-      <img src={kitabifyBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <img src={kitabifyBg} alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-background/40" />
 
       <motion.div

@@ -83,6 +83,105 @@ export type Database = {
         }
         Relationships: []
       }
+      user_progress: {
+        Row: {
+          bab_id: string
+          best_quiz_score: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          jilid_id: string
+          kitab_id: string
+          read: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bab_id: string
+          best_quiz_score?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          jilid_id: string
+          kitab_id: string
+          read?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bab_id?: string
+          best_quiz_score?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          jilid_id?: string
+          kitab_id?: string
+          read?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streak: {
+        Row: {
+          created_at: string
+          current_streak: number
+          hearts: number
+          hearts_updated_at: string
+          last_claim_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          hearts?: number
+          hearts_updated_at?: string
+          last_claim_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          hearts?: number
+          hearts_updated_at?: string
+          last_claim_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_xp: {
+        Row: {
+          created_at: string
+          level: number
+          lifetime_xp: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          level?: number
+          lifetime_xp?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          level?: number
+          lifetime_xp?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

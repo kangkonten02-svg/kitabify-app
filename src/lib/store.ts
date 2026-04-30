@@ -47,6 +47,9 @@ export function addExp(amount: number, source: string) {
   // Level up every 100 EXP
   u.level = Math.floor(u.exp / 100) + 1;
   saveUser(u);
+  // Best-effort cloud sync for the new XP table (extends, never replaces).
+  // Lazy import to avoid circular deps with gamification.ts.
+  import("./gamification").then((m) => m.syncXpToCloud()).catch(() => {});
 }
 
 export function getLevelTitle(level: number): string {

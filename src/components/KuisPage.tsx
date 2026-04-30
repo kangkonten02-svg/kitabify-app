@@ -190,6 +190,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   };
 
   const startQuiz = (bab: NahwuBab) => {
+    if (getHearts() <= 0) {
+      alert("Hearts kamu habis ❤️\nTunggu regen atau tukar EXP untuk refill.");
+      return;
+    }
     // Randomize question order AND options each time the quiz starts.
     setActiveBab(randomizeBab(bab));
     setCurrentQ(0);

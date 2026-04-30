@@ -695,10 +695,13 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   // =====================================================
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-extrabold mb-1">Kuis</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Latihan soal Nahwu per jilid
-      </p>
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold">Kuis</h1>
+          <p className="text-xs text-muted-foreground">Latihan soal Nahwu per jilid</p>
+        </div>
+        <HeartsBar />
+      </div>
 
       <div className="space-y-3">
         {JILID_LIST.map((j) => {

@@ -22,6 +22,8 @@ import {
   QUIZ_PERFECT_SCORE,
   type BabLocation,
 } from "@/lib/babNavigation";
+import { getHearts, loseHeart } from "@/lib/gamification";
+import HeartsBar from "./HeartsBar";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
 type Letter = "A" | "B" | "C" | "D";

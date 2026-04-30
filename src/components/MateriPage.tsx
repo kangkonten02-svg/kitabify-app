@@ -775,24 +775,47 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
   };
 
   // Materi list
-  const visibleKitabs = filterKitabId
-    ? MATERI_DATA.filter((k) => k.id === filterKitabId)
-    : MATERI_DATA;
   const filteredKitab = filterKitabId ? MATERI_DATA.find((k) => k.id === filterKitabId) : null;
+  const nonKholasoh = MATERI_DATA.filter((k) => !k.isKholasoh);
+  const activePathKitabId = filterKitabId && filteredKitab && !filteredKitab.isKholasoh
+    ? filterKitabId
+    : openKitab && nonKholasoh.some((k) => k.id === openKitab)
+    ? openKitab
+    : nonKholasoh[0]?.id ?? null;
+  const activePathKitab = activePathKitabId
+    ? MATERI_DATA.find((k) => k.id === activePathKitabId) ?? null
+    : null;
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4 gap-3">
-        <h1 className="text-2xl font-extrabold text-foreground">
-          {filteredKitab ? `${filteredKitab.icon} ${filteredKitab.title}` : "📚 Materi"}
+        <h1 className="text-2xl font-extrabold text-foreground truncate">
+          {activePathKitab ? `${activePathKitab.icon} ${activePathKitab.title}` : "📚 Materi"}
         </h1>
-        {filterKitabId && (
-          <button
-            onClick={() => { setFilterKitabId(null); setOpenKitab(null); setOpenJilid(null); }}
-            className="text-xs font-semibold text-primary px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition flex-shrink-0"
-          >
-            Lihat semua
-          </button>
-        )}
+        <HeartsBar />
+      </div>
+
+      {/* Kitab picker chips */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide mb-3">
+        {MATERI_DATA.map((k) => {
+          const isActive = k.isKholasoh ? showKholasoh : k.id === activePathKitabId;
+          return (
+            <button
+              key={k.id}
+              onClick={() => {
+                if (k.isKholasoh) { setShowKholasoh(true); return; }
+                setOpenKitab(k.id);
+                setFilterKitabId(k.id);
+              }}
+              className={`flex-shrink-0 px-3 py-2 rounded-full text-xs font-bold border-2 transition ${
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-card text-foreground border-border hover:border-primary/50"
+              }`}
+            >
+              <span className="mr-1">{k.icon}</span>{k.title}
+            </button>
+          );
+        })}
       </div>
 
       {/* Search Bar */}

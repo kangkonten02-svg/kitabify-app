@@ -226,6 +226,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     setPicked(letter);
     setLogs((prev) => [...prev, { soal, picked: letter, correct }]);
     setShowFeedback(true);
+    if (!correct) loseHeart();
   };
 
   const goNext = () => {

@@ -162,6 +162,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
       setPicked(null);
       setLogs((prev) => [...prev, { soal, picked: null, correct: false }]);
       setShowFeedback(true);
+      loseHeart();
     }
   }, [timeLeft, phase, showFeedback, activeBab, currentQ]);
 

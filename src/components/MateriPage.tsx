@@ -19,6 +19,9 @@ import {
   getBestQuizScore,
   QUIZ_PASS_THRESHOLD,
 } from "@/lib/babNavigation";
+import { markBabRead } from "@/lib/gamification";
+import HeartsBar from "./HeartsBar";
+import PathView from "./PathView";
 
 // All rich content combined
 const ALL_RICH_CONTENT: RichBab[] = [
@@ -323,6 +326,7 @@ const RichContentViewer = ({
     saveUser(user);
     addExp(15, `Belajar: ${bab.title}`);
     setMarked(true);
+    markBabRead({ kitabId, jilidId, babId });
     window.dispatchEvent(new Event("storage"));
   };
 
@@ -643,6 +647,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
       user.materiProgress[selectedBab.babId] = 100;
       saveUser(user);
       addExp(15, `Belajar: ${simpleBab.title}`);
+      markBabRead(selectedBab);
       setRefresh((r) => r + 1);
     };
     const goToBab = (loc: { kitabId: string; jilidId: string; babId: string }) => {
@@ -770,24 +775,47 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
   };
 
   // Materi list
-  const visibleKitabs = filterKitabId
-    ? MATERI_DATA.filter((k) => k.id === filterKitabId)
-    : MATERI_DATA;
   const filteredKitab = filterKitabId ? MATERI_DATA.find((k) => k.id === filterKitabId) : null;
+  const nonKholasoh = MATERI_DATA.filter((k) => !k.isKholasoh);
+  const activePathKitabId = filterKitabId && filteredKitab && !filteredKitab.isKholasoh
+    ? filterKitabId
+    : openKitab && nonKholasoh.some((k) => k.id === openKitab)
+    ? openKitab
+    : nonKholasoh[0]?.id ?? null;
+  const activePathKitab = activePathKitabId
+    ? MATERI_DATA.find((k) => k.id === activePathKitabId) ?? null
+    : null;
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4 gap-3">
-        <h1 className="text-2xl font-extrabold text-foreground">
-          {filteredKitab ? `${filteredKitab.icon} ${filteredKitab.title}` : "📚 Materi"}
+        <h1 className="text-2xl font-extrabold text-foreground truncate">
+          {activePathKitab ? `${activePathKitab.icon} ${activePathKitab.title}` : "📚 Materi"}
         </h1>
-        {filterKitabId && (
-          <button
-            onClick={() => { setFilterKitabId(null); setOpenKitab(null); setOpenJilid(null); }}
-            className="text-xs font-semibold text-primary px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition flex-shrink-0"
-          >
-            Lihat semua
-          </button>
-        )}
+        <HeartsBar />
+      </div>
+
+      {/* Kitab picker chips */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide mb-3">
+        {MATERI_DATA.map((k) => {
+          const isActive = k.isKholasoh ? showKholasoh : k.id === activePathKitabId;
+          return (
+            <button
+              key={k.id}
+              onClick={() => {
+                if (k.isKholasoh) { setShowKholasoh(true); return; }
+                setOpenKitab(k.id);
+                setFilterKitabId(k.id);
+              }}
+              className={`flex-shrink-0 px-3 py-2 rounded-full text-xs font-bold border-2 transition ${
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-card text-foreground border-border hover:border-primary/50"
+              }`}
+            >
+              <span className="mr-1">{k.icon}</span>{k.title}
+            </button>
+          );
+        })}
       </div>
 
       {/* Search Bar */}
@@ -864,130 +892,17 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
         </AnimatePresence>
       </div>
 
-      {/* Kitab List */}
-      <div className="space-y-3">
-        {visibleKitabs.map((kitab) => (
-          <div key={kitab.id} className="glass-card overflow-hidden">
-            <button
-              onClick={() => kitab.isKholasoh ? setShowKholasoh(true) : setOpenKitab(openKitab === kitab.id ? null : kitab.id)}
-              className="w-full flex items-center justify-between p-4"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{kitab.icon}</span>
-                <div className="text-left">
-                  <span className="font-bold text-foreground">{kitab.title}</span>
-                  <p className="text-xs text-muted-foreground">
-                    {kitab.isKholasoh
-                      ? `${ALFIYAH_ENTRIES.length} bait`
-                      : `${kitab.jilids.length} jilid • ${kitab.jilids.reduce((s, j) => s + j.babs.length, 0)} bab`
-                    }
-                  </p>
-                </div>
-              </div>
-              {kitab.isKholasoh ? (
-                <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-semibold">
-                  {ALFIYAH_ENTRIES.length} bait
-                </span>
-              ) : (
-                <ChevronDown
-                  size={18}
-                  className={`text-muted-foreground transition-transform duration-200 ${openKitab === kitab.id ? "rotate-180" : ""}`}
-                />
-              )}
-            </button>
-            <AnimatePresence>
-              {openKitab === kitab.id && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-4 pb-3 space-y-2">
-                    {kitab.jilids.map((jilid) => (
-                      <div key={jilid.id}>
-                        <button
-                          onClick={() => setOpenJilid(openJilid === jilid.id ? null : jilid.id)}
-                          className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl bg-muted/50 hover:bg-muted transition"
-                        >
-                          <span className="text-sm font-semibold text-foreground">📂 {jilid.title}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-muted-foreground">{jilid.babs.length} bab</span>
-                            <ChevronDown
-                              size={14}
-                              className={`text-muted-foreground transition-transform duration-200 ${openJilid === jilid.id ? "rotate-180" : ""}`}
-                            />
-                          </div>
-                        </button>
-                        <AnimatePresence>
-                          {openJilid === jilid.id && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="pl-4 py-2 space-y-1">
-                                {jilid.babs.map((b, babIdx) => {
-                                  const done = user?.materiProgress[b.id] === 100;
-                                  const hasRich = ALL_RICH_CONTENT.some((rc) => rc.id === b.id);
-                                  // Determine prev bab in this jilid; lock if prev has a quiz not yet passed.
-                                  const prevB = babIdx > 0 ? jilid.babs[babIdx - 1] : null;
-                                  const prevQuiz = prevB ? hasQuiz(jilid.id, prevB.id) : false;
-                                  const locked =
-                                    prevB && prevQuiz && !hasPassedQuiz(prevB.id);
-                                  return (
-                                    <button
-                                      key={b.id}
-                                      onClick={() => {
-                                        if (locked) return;
-                                        setSelectedBab({ kitabId: kitab.id, jilidId: jilid.id, babId: b.id });
-                                      }}
-                                      disabled={!!locked}
-                                      className={`w-full flex items-center gap-3 py-2.5 px-3 rounded-lg transition text-left ${
-                                        locked
-                                          ? "opacity-50 cursor-not-allowed"
-                                          : "hover:bg-muted/50"
-                                      }`}
-                                    >
-                                      {locked ? (
-                                        <Lock size={16} className="text-muted-foreground flex-shrink-0" />
-                                      ) : done ? (
-                                        <CheckCircle size={16} className="text-primary flex-shrink-0" />
-                                      ) : (
-                                        <BookOpen size={16} className="text-muted-foreground flex-shrink-0" />
-                                      )}
-                                      <span className={`text-sm flex-1 ${done ? "text-primary font-medium" : "text-foreground"}`}>
-                                        {b.title}
-                                      </span>
-                                      {locked && (
-                                        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-semibold">
-                                          Terkunci
-                                        </span>
-                                      )}
-                                      {!locked && hasRich && (
-                                        <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">
-                                          Lengkap
-                                        </span>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
-      </div>
+      {/* Game-mode vertical learning path */}
+      {activePathKitab && (
+        <PathView
+          kitab={activePathKitab}
+          onSelectBab={(loc) => {
+            setOpenKitab(loc.kitabId);
+            setOpenJilid(loc.jilidId);
+            setSelectedBab(loc);
+          }}
+        />
+      )}
     </div>
   );
 };

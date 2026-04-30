@@ -22,6 +22,8 @@ import {
   QUIZ_PERFECT_SCORE,
   type BabLocation,
 } from "@/lib/babNavigation";
+import { getHearts, loseHeart } from "@/lib/gamification";
+import HeartsBar from "./HeartsBar";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
 type Letter = "A" | "B" | "C" | "D";
@@ -160,6 +162,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
       setPicked(null);
       setLogs((prev) => [...prev, { soal, picked: null, correct: false }]);
       setShowFeedback(true);
+      loseHeart();
     }
   }, [timeLeft, phase, showFeedback, activeBab, currentQ]);
 
@@ -187,6 +190,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   };
 
   const startQuiz = (bab: NahwuBab) => {
+    if (getHearts() <= 0) {
+      alert("Hearts kamu habis ❤️\nTunggu regen atau tukar EXP untuk refill.");
+      return;
+    }
     // Randomize question order AND options each time the quiz starts.
     setActiveBab(randomizeBab(bab));
     setCurrentQ(0);
@@ -219,6 +226,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     setPicked(letter);
     setLogs((prev) => [...prev, { soal, picked: letter, correct }]);
     setShowFeedback(true);
+    if (!correct) loseHeart();
   };
 
   const goNext = () => {
@@ -687,10 +695,13 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   // =====================================================
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-extrabold mb-1">Kuis</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Latihan soal Nahwu per jilid
-      </p>
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold">Kuis</h1>
+          <p className="text-xs text-muted-foreground">Latihan soal Nahwu per jilid</p>
+        </div>
+        <HeartsBar />
+      </div>
 
       <div className="space-y-3">
         {JILID_LIST.map((j) => {

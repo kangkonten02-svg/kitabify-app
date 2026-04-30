@@ -19,6 +19,9 @@ import {
   getBestQuizScore,
   QUIZ_PASS_THRESHOLD,
 } from "@/lib/babNavigation";
+import { markBabRead } from "@/lib/gamification";
+import HeartsBar from "./HeartsBar";
+import PathView from "./PathView";
 
 // All rich content combined
 const ALL_RICH_CONTENT: RichBab[] = [
@@ -323,6 +326,7 @@ const RichContentViewer = ({
     saveUser(user);
     addExp(15, `Belajar: ${bab.title}`);
     setMarked(true);
+    markBabRead({ kitabId, jilidId, babId });
     window.dispatchEvent(new Event("storage"));
   };
 

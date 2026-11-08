@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_overrides: {
+        Row: {
+          content_id: string
+          payload: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content_id: string
+          payload: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content_id?: string
+          payload?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
@@ -44,6 +65,30 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_overrides: {
+        Row: {
+          bab_id: string
+          jilid_id: string
+          payload: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bab_id: string
+          jilid_id: string
+          payload: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bab_id?: string
+          jilid_id?: string
+          payload?: Json
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

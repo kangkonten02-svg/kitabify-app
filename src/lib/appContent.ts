@@ -155,6 +155,10 @@ export function getSeedRichContent(): RichBab[] {
   return seedRichContent;
 }
 
+export function getMaterialOverride(contentId: string): MaterialOverride | undefined {
+  return contentOverrides.get(contentId);
+}
+
 export function hasMaterialOverride(contentId: string): boolean {
   return contentOverrides.has(contentId);
 }

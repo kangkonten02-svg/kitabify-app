@@ -9,6 +9,7 @@ import { SAFINAH_CONTENT } from "@/lib/safinahContent";
 
 export type SimpleBab = { id: string; title: string; content?: string };
 export type MaterialOverride = RichBab | SimpleBab | AlfiyahEntry;
+export type EditableMaterialRecord = { id: string; label: string; kind: "rich" | "simple" | "alfiyah"; payload: MaterialOverride };
 
 const seedRichContent: RichBab[] = [
   ...JILID1_CONTENT,
@@ -157,6 +158,31 @@ export function getSeedRichContent(): RichBab[] {
 
 export function getMaterialOverride(contentId: string): MaterialOverride | undefined {
   return contentOverrides.get(contentId);
+}
+
+export function getEditableMaterialRecords(): EditableMaterialRecord[] {
+  const richById = new Map(seedRichContent.map((item) => [item.id, item]));
+  const records: EditableMaterialRecord[] = [];
+  const seen = new Set<string>();
+  MATERI_DATA.forEach((kitab) => kitab.jilids.forEach((jilid) => jilid.babs.forEach((bab) => {
+    const rich = richById.get(bab.id);
+    const payload = contentOverrides.get(bab.id) ?? rich ?? bab;
+    const kind = isRichBab(payload) ? "rich" : "simple";
+    records.push({ id: bab.id, label: `${kitab.title} · ${jilid.title} · ${payload.title}`, kind, payload });
+    seen.add(bab.id);
+  })));
+  seedRichContent.forEach((bab) => {
+    if (seen.has(bab.id)) return;
+    const payload = contentOverrides.get(bab.id);
+    records.push({ id: bab.id, label: `Materi · ${payload && isRichBab(payload) ? payload.title : bab.title}`, kind: "rich", payload: payload && isRichBab(payload) ? payload : bab });
+    seen.add(bab.id);
+  });
+  ALFIYAH_ENTRIES.forEach((entry) => {
+    const key = `alfiyah:${entry.id}`;
+    const override = contentOverrides.get(key);
+    records.push({ id: key, label: `Kholasoh Alfiyah · ${entry.bab} · ${entry.id}`, kind: "alfiyah", payload: override && isAlfiyahEntry(override) ? override : entry });
+  });
+  return records;
 }
 
 export function hasMaterialOverride(contentId: string): boolean {

@@ -1,11 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MATERI_DATA } from "@/lib/materiData";
-import { JILID1_CONTENT, ALFIYAH_ENTRIES, getAlfiyahById, getAlfiyahByBab, type RichBab, type ContentSection } from "@/lib/jilidContent";
-import { JILID2_CONTENT } from "@/lib/jilid2Content";
-import { JILID3_CONTENT } from "@/lib/jilid3Content";
-import { JURUMIYAH_CONTENT } from "@/lib/jurumiyahContent";
-import { SAFINAH_CONTENT } from "@/lib/safinahContent";
+import { type ContentSection } from "@/lib/jilidContent";
+import { getMergedAlfiyahEntries, getMergedMateriData, getMergedRichContent, loadContentOverrides } from "@/lib/appContent";
 import { getUser, saveUser, addExp } from "@/lib/store";
 import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones, Lock } from "lucide-react";
 import { ClickableItem } from "./InteractivePopup";
@@ -22,15 +18,6 @@ import {
 import { markBabRead } from "@/lib/gamification";
 import HeartsBar from "./HeartsBar";
 import PathView from "./PathView";
-
-// All rich content combined
-const ALL_RICH_CONTENT: RichBab[] = [
-  ...JILID1_CONTENT,
-  ...JILID2_CONTENT,
-  ...JILID3_CONTENT,
-  ...JURUMIYAH_CONTENT,
-  ...SAFINAH_CONTENT,
-];
 
 // Rich content renderer
 const SectionCard = ({ section }: { section: ContentSection }) => {
@@ -98,7 +85,7 @@ const SectionCard = ({ section }: { section: ContentSection }) => {
       );
 
     case "alfiyah": {
-      const entry = section.alfiyahId ? getAlfiyahById(section.alfiyahId) : null;
+      const entry = section.alfiyahId ? getMergedAlfiyahEntries().find((item) => item.id === section.alfiyahId) : null;
       return (
         <div className="rounded-2xl border-2 border-accent/40 bg-accent/10 p-5 space-y-4">
           {section.title && <h4 className="font-bold text-accent text-sm flex items-center gap-2">{section.title}</h4>}
@@ -177,7 +164,7 @@ const SectionCard = ({ section }: { section: ContentSection }) => {
       );
 
     case "table": {
-      const tableAlfiyah = section.alfiyahId ? getAlfiyahById(section.alfiyahId) : null;
+      const tableAlfiyah = section.alfiyahId ? getMergedAlfiyahEntries().find((item) => item.id === section.alfiyahId) : null;
       return (
         <div className="glass-card p-4 space-y-3">
           {section.title && <h4 className="font-bold text-foreground text-sm">{section.title}</h4>}
@@ -487,6 +474,9 @@ interface MateriPageProps {
 }
 
 const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
+  const [materiData, setMateriData] = useState(getMergedMateriData);
+  const [richContent, setRichContent] = useState(getMergedRichContent);
+  const [alfiyahEntries, setAlfiyahEntries] = useState(getMergedAlfiyahEntries);
   const [openKitab, setOpenKitab] = useState<string | null>(null);
   const [openJilid, setOpenJilid] = useState<string | null>(null);
   const [selectedBab, setSelectedBab] = useState<{ kitabId: string; jilidId: string; babId: string } | null>(null);
@@ -502,7 +492,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
     if (initialKitabId !== undefined) {
       setFilterKitabId(initialKitabId ?? null);
       if (initialKitabId) {
-        const kitab = MATERI_DATA.find((k) => k.id === initialKitabId);
+        const kitab = materiData.find((k) => k.id === initialKitabId);
         if (kitab?.isKholasoh) {
           setShowKholasoh(true);
         } else {
@@ -531,6 +521,20 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
 
   const user = getUser();
 
+  useEffect(() => {
+    const refreshOverrides = () => {
+      setMateriData(getMergedMateriData());
+      setRichContent(getMergedRichContent());
+      setAlfiyahEntries(getMergedAlfiyahEntries());
+    };
+    loadContentOverrides().then(refreshOverrides).catch(() => {});
+    const onContentChanged = () => {
+      loadContentOverrides(true).then(refreshOverrides).catch(() => {});
+    };
+    window.addEventListener("kitabify-content-updated", onContentChanged);
+    return () => window.removeEventListener("kitabify-content-updated", onContentChanged);
+  }, []);
+
   // Build search index
   const searchResults = useMemo<SearchResult[]>(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -538,7 +542,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
 
     const results: SearchResult[] = [];
 
-    for (const kitab of MATERI_DATA) {
+    for (const kitab of materiData) {
       if (kitab.isKholasoh) continue;
 
       const kitabMatch = kitab.title.toLowerCase().includes(q);
@@ -548,7 +552,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
           const babMatch = bab.title.toLowerCase().includes(q);
 
           // Search in rich content
-          const richBab = ALL_RICH_CONTENT.find((r) => r.id === bab.id);
+          const richBab = richContent.find((r) => r.id === bab.id);
           let contentMatch = false;
           let snippet = "";
 
@@ -602,16 +606,16 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
     }
 
     return results.slice(0, 15);
-  }, [searchQuery]);
+  }, [searchQuery, materiData, richContent]);
 
   // Check if this bab has rich content
   const richBab = selectedBab
-    ? ALL_RICH_CONTENT.find((b) => b.id === selectedBab.babId)
+    ? richContent.find((b) => b.id === selectedBab.babId)
     : null;
 
   // Fallback to simple content
   const simpleBab = selectedBab
-    ? MATERI_DATA.find((k) => k.id === selectedBab.kitabId)
+    ? materiData.find((k) => k.id === selectedBab.kitabId)
         ?.jilids.find((j) => j.id === selectedBab.jilidId)
         ?.babs.find((b) => b.id === selectedBab.babId)
     : null;
@@ -716,7 +720,10 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
 
   // Kholasoh Alfiyah view
   if (showKholasoh) {
-    const grouped = getAlfiyahByBab();
+    const grouped = alfiyahEntries.reduce<Record<string, typeof alfiyahEntries>>((acc, entry) => {
+      (acc[entry.bab] ??= []).push(entry);
+      return acc;
+    }, {});
     return (
       <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
         <button onClick={() => setShowKholasoh(false)} className="flex items-center gap-2 text-primary mb-5 text-sm font-semibold">
@@ -775,15 +782,15 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
   };
 
   // Materi list
-  const filteredKitab = filterKitabId ? MATERI_DATA.find((k) => k.id === filterKitabId) : null;
-  const nonKholasoh = MATERI_DATA.filter((k) => !k.isKholasoh);
+  const filteredKitab = filterKitabId ? materiData.find((k) => k.id === filterKitabId) : null;
+  const nonKholasoh = materiData.filter((k) => !k.isKholasoh);
   const activePathKitabId = filterKitabId && filteredKitab && !filteredKitab.isKholasoh
     ? filterKitabId
     : openKitab && nonKholasoh.some((k) => k.id === openKitab)
     ? openKitab
     : nonKholasoh[0]?.id ?? null;
   const activePathKitab = activePathKitabId
-    ? MATERI_DATA.find((k) => k.id === activePathKitabId) ?? null
+    ? materiData.find((k) => k.id === activePathKitabId) ?? null
     : null;
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -796,7 +803,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
 
       {/* Kitab picker chips */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide mb-3">
-        {MATERI_DATA.map((k) => {
+        {materiData.map((k) => {
           const isActive = k.isKholasoh ? showKholasoh : k.id === activePathKitabId;
           return (
             <button

@@ -8,6 +8,13 @@
       "when": 1794125733163,
       "tag": "0000_add_admin_content_overrides",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794258465926,
+      "tag": "0001_secure_content_override_writes",
+      "breakpoints": true
     }
   ]
 }

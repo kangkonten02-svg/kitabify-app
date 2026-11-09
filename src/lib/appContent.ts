@@ -1,14 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { MATERI_DATA, type Kitab } from "@/lib/materiData";
 import { JILID_LIST, type NahwuBab, type NahwuJilid } from "@/lib/nahwuQuizData";
-import { JILID1_CONTENT, type RichBab } from "@/lib/jilidContent";
+import { ALFIYAH_ENTRIES, JILID1_CONTENT, type AlfiyahEntry, type RichBab } from "@/lib/jilidContent";
 import { JILID2_CONTENT } from "@/lib/jilid2Content";
 import { JILID3_CONTENT } from "@/lib/jilid3Content";
 import { JURUMIYAH_CONTENT } from "@/lib/jurumiyahContent";
 import { SAFINAH_CONTENT } from "@/lib/safinahContent";
 
 export type SimpleBab = { id: string; title: string; content?: string };
-export type MaterialOverride = RichBab | SimpleBab;
+export type MaterialOverride = RichBab | SimpleBab | AlfiyahEntry;
 
 const seedRichContent: RichBab[] = [
   ...JILID1_CONTENT,
@@ -38,6 +38,12 @@ export function isSimpleBab(value: unknown): value is SimpleBab {
     (value.content === undefined || typeof value.content === "string");
 }
 
+export function isAlfiyahEntry(value: unknown): value is AlfiyahEntry {
+  return isRecord(value) && typeof value.id === "string" && typeof value.bab === "string" &&
+    typeof value.bait_arab === "string" && typeof value.bait_latin === "string" &&
+    typeof value.arti === "string" && typeof value.digunakan_di_materi === "boolean";
+}
+
 export function isNahwuBab(value: unknown): value is NahwuBab {
   if (!isRecord(value) || typeof value.id !== "string" || typeof value.title !== "string" ||
       typeof value.description !== "string" || !Array.isArray(value.soal)) return false;
@@ -64,7 +70,7 @@ export async function loadContentOverrides(force = false): Promise<void> {
     quizOverrides.clear();
     (materials.data ?? []).forEach((row) => {
       const payload = row.payload as unknown;
-      if (isRichBab(payload) || isSimpleBab(payload)) contentOverrides.set(row.content_id, payload);
+      if (isRichBab(payload) || isSimpleBab(payload) || isAlfiyahEntry(payload)) contentOverrides.set(row.content_id, payload);
     });
     (quizzes.data ?? []).forEach((row) => {
       const payload = row.payload as unknown;
@@ -83,6 +89,13 @@ export function getMergedRichContent(): RichBab[] {
   return seedRichContent.map((seed) => {
     const override = contentOverrides.get(seed.id);
     return isRichBab(override) && override.id === seed.id ? override : seed;
+  });
+}
+
+export function getMergedAlfiyahEntries(): AlfiyahEntry[] {
+  return ALFIYAH_ENTRIES.map((entry) => {
+    const override = contentOverrides.get(`alfiyah:${entry.id}`);
+    return isAlfiyahEntry(override) && override.id === entry.id ? override : entry;
   });
 }
 

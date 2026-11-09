@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  JILID_LIST,
   type NahwuJilid,
   type NahwuBab,
   type NahwuSoal,
@@ -14,7 +13,6 @@ import {
 } from "lucide-react";
 import {
   consumePendingQuiz,
-  findNahwuBabByMateriId,
   recordQuizScore,
   setPendingMateri,
   getNextBab,
@@ -23,6 +21,7 @@ import {
   type BabLocation,
 } from "@/lib/babNavigation";
 import { getHearts, loseHeart } from "@/lib/gamification";
+import { getMergedQuizList, loadContentOverrides } from "@/lib/appContent";
 import HeartsBar from "./HeartsBar";
 
 type Phase = "jilid" | "bab" | "quiz" | "result";
@@ -107,6 +106,7 @@ function isArabic(text: string): boolean {
 }
 
 const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
+  const [quizList, setQuizList] = useState(getMergedQuizList());
   const [phase, setPhase] = useState<Phase>("jilid");
   const [activeJilid, setActiveJilid] = useState<NahwuJilid | null>(null);
   const [activeBab, setActiveBab] = useState<NahwuBab | null>(null);
@@ -208,13 +208,28 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
 
   // Consume pending materi → auto-launch the matching nahwu bab quiz.
   useEffect(() => {
-    const pending = consumePendingQuiz();
-    if (!pending) return;
-    const match = findNahwuBabByMateriId(pending.babId);
-    if (!match) return;
-    setMateriLoc(pending);
-    setActiveJilid(match.jilid);
-    startQuiz(match.bab);
+    const initializeContent = async () => {
+      try {
+        await loadContentOverrides();
+      } catch {
+        // Seed content remains available if the cloud is unreachable.
+      }
+      const mergedList = getMergedQuizList();
+      setQuizList(mergedList);
+      const pending = consumePendingQuiz();
+      if (!pending) return;
+      const normalized = pending.babId.replace(/^j\d+_/, "");
+      for (const jilid of mergedList) {
+        const bab = jilid.babs.find((item) => item.id.endsWith(`_${normalized}`) || item.id === pending.babId);
+        if (bab) {
+          setMateriLoc(pending);
+          setActiveJilid(jilid);
+          startQuiz(bab);
+          return;
+        }
+      }
+    };
+    void initializeContent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -704,7 +719,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
       </div>
 
       <div className="space-y-3">
-        {JILID_LIST.map((j) => {
+        {quizList.map((j) => {
           const c = COLOR_MAP[j.color];
           return (
             <motion.button

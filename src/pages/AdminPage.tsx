@@ -10,10 +10,12 @@ import {
   Plus,
   RefreshCw,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { computeActive, type Subscription, type SubscriptionTier } from "@/lib/subscription";
+import AdminContentEditor from "@/components/AdminContentEditor";
 
 interface UserRow {
   id: string;
@@ -37,6 +39,7 @@ const AdminPage = () => {
   const [addDays, setAddDays] = useState(180);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [editingContent, setEditingContent] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -192,6 +195,10 @@ const AdminPage = () => {
     );
   }
 
+  if (editingContent) {
+    return <AdminContentEditor onBack={() => setEditingContent(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background bg-texture pb-12">
       <div className="max-w-2xl mx-auto px-4 pt-6">
@@ -213,7 +220,10 @@ const AdminPage = () => {
         </div>
 
         <h1 className="text-3xl font-extrabold text-foreground">Panel Admin</h1>
-        <p className="text-muted-foreground text-sm mt-1">Kelola user & langganan</p>
+        <p className="text-muted-foreground text-sm mt-1">Kelola user, langganan, materi, dan soal</p>
+        <Button className="mt-4 w-full" onClick={() => setEditingContent(true)}>
+          <BookOpen /> Edit Semua Materi & Soal
+        </Button>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mt-5">

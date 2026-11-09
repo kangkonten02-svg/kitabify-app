@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type RichBab, type ContentSection } from "@/lib/jilidContent";
-import { getMergedAlfiyahEntries, getMergedMateriData, getMergedRichContent, loadContentOverrides, type RichBab } from "@/lib/appContent";
+import { type ContentSection } from "@/lib/jilidContent";
+import { getMergedAlfiyahEntries, getMergedMateriData, getMergedRichContent, loadContentOverrides } from "@/lib/appContent";
 import { getUser, saveUser, addExp } from "@/lib/store";
 import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones, Lock } from "lucide-react";
 import { ClickableItem } from "./InteractivePopup";
@@ -492,7 +492,7 @@ const MateriPage = ({ onGoKuis, initialKitabId }: MateriPageProps = {}) => {
     if (initialKitabId !== undefined) {
       setFilterKitabId(initialKitabId ?? null);
       if (initialKitabId) {
-        const kitab = MATERI_DATA.find((k) => k.id === initialKitabId);
+        const kitab = materiData.find((k) => k.id === initialKitabId);
         if (kitab?.isKholasoh) {
           setShowKholasoh(true);
         } else {

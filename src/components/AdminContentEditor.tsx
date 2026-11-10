@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, Check, Save } from "lucide-react";
+import { ArrowLeft, BookOpen, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,14 +24,13 @@ interface AdminContentEditorProps {
 
 function validateMaterial(record: EditableMaterialRecord, value: unknown): string | null {
   if (record.kind === "rich" && isRichBab(value) && value.id === record.id) {
-    const supportedTypes = new Set(["text", "list", "arabic", "kaidah", "alfiyah", "example", "table", "grid", "pairs", "ayat", "contoh_kalimat"]);
-    const validSections = value.sections.every((section) =>
-      typeof section === "object" && section !== null && "type" in section &&
-      supportedTypes.has(String(section.type)) &&
-      (!(("items" in section) && section.items !== undefined) || Array.isArray(section.items)) &&
-      (!(("rows" in section) && section.rows !== undefined) || Array.isArray(section.rows))
+    const supported = new Set(["text", "list", "arabic", "kaidah", "alfiyah", "example", "table", "grid", "pairs", "ayat", "contoh_kalimat"]);
+    const valid = value.sections.every((section) =>
+      typeof section === "object" && section !== null && "type" in section && supported.has(String(section.type)) &&
+      (!("items" in section) || section.items === undefined || Array.isArray(section.items)) &&
+      (!("rows" in section) || section.rows === undefined || Array.isArray(section.rows))
     );
-    return validSections ? null : "Periksa kembali jenis bagian, daftar, atau baris materi.";
+    return valid ? null : "Periksa kembali jenis bagian, daftar, atau baris materi.";
   }
   if (record.kind === "simple" && isSimpleBab(value) && value.id === record.id) return null;
   if (record.kind === "alfiyah" && isAlfiyahEntry(value) && value.id === record.id.replace("alfiyah:", "")) return null;
@@ -149,72 +148,43 @@ const AdminContentEditor = ({ onBack }: AdminContentEditorProps) => {
 
           <TabsContent value="materi" className="mt-4 space-y-3">
             <label className="block text-sm font-semibold text-foreground" htmlFor="material-picker">Pilih materi</label>
-            <select
-              id="material-picker"
-              value={materialId}
-              onChange={(event) => setMaterialId(event.target.value)}
-              className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
-            >
+            <select id="material-picker" value={materialId} onChange={(event) => setMaterialId(event.target.value)}
+              className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
               {records.map((record) => <option key={record.id} value={record.id}>{record.label}</option>)}
             </select>
-            {selectedRecord && (
-              <>
-                <p className="text-xs text-muted-foreground">Judul, isi, contoh, bait, dan susunan bagian materi dapat diubah di bawah.</p>
-                <Textarea
-                  aria-label="Isi materi"
-                  value={materialJson}
-                  onChange={(event) => setMaterialJson(event.target.value)}
-                  className="min-h-[55vh] font-mono text-xs leading-relaxed"
-                  spellCheck={false}
-                />
-                <Button onClick={saveMaterial} disabled={savingMaterial} className="w-full">
-                  {savingMaterial ? <Check className="animate-pulse" /> : <Save />}
-                  Simpan Materi
-                </Button>
-              </>
-            )}
+            {selectedRecord && <>
+              <p className="text-xs text-muted-foreground">Judul, isi, contoh, bait, dan susunan bagian materi dapat diubah di bawah.</p>
+              <Textarea aria-label="Isi materi" value={materialJson} onChange={(event) => setMaterialJson(event.target.value)}
+                className="min-h-[55vh] font-mono text-xs leading-relaxed" spellCheck={false} />
+              <Button onClick={saveMaterial} disabled={savingMaterial} className="w-full">
+                <Save /> {savingMaterial ? "Menyimpan…" : "Simpan Materi"}
+              </Button>
+            </>}
           </TabsContent>
 
           <TabsContent value="soal" className="mt-4 space-y-3">
             <label className="block text-sm font-semibold text-foreground" htmlFor="quiz-jilid-picker">Pilih jilid</label>
-            <select
-              id="quiz-jilid-picker"
-              value={quizJilidId}
-              onChange={(event) => {
-                const nextId = event.target.value;
-                const nextJilid = quizList.find((item) => item.id === nextId);
-                setQuizJilidId(nextId);
-                setQuizBabId(nextJilid?.babs[0]?.id ?? "");
-              }}
-              className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
-            >
+            <select id="quiz-jilid-picker" value={quizJilidId} onChange={(event) => {
+              const nextId = event.target.value;
+              const nextJilid = quizList.find((item) => item.id === nextId);
+              setQuizJilidId(nextId);
+              setQuizBabId(nextJilid?.babs[0]?.id ?? "");
+            }} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
               {quizList.map((jilid) => <option key={jilid.id} value={jilid.id}>{jilid.title}</option>)}
             </select>
             <label className="block text-sm font-semibold text-foreground" htmlFor="quiz-bab-picker">Pilih bab</label>
-            <select
-              id="quiz-bab-picker"
-              value={quizBabId}
-              onChange={(event) => setQuizBabId(event.target.value)}
-              className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
-            >
+            <select id="quiz-bab-picker" value={quizBabId} onChange={(event) => setQuizBabId(event.target.value)}
+              className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground">
               {(selectedJilid?.babs ?? []).map((bab) => <option key={bab.id} value={bab.id}>{bab.title}</option>)}
             </select>
-            {selectedBab && (
-              <>
-                <p className="text-xs text-muted-foreground">Edit pertanyaan, pilihan A–D, kunci jawaban, dan pembahasan. Pastikan jawaban benar tetap A, B, C, atau D.</p>
-                <Textarea
-                  aria-label="Isi soal"
-                  value={quizJson}
-                  onChange={(event) => setQuizJson(event.target.value)}
-                  className="min-h-[55vh] font-mono text-xs leading-relaxed"
-                  spellCheck={false}
-                />
-                <Button onClick={saveQuiz} disabled={savingQuiz} className="w-full">
-                  {savingQuiz ? <Check className="animate-pulse" /> : <Save />}
-                  Simpan Soal
-                </Button>
-              </>
-            )}
+            {selectedBab && <>
+              <p className="text-xs text-muted-foreground">Edit pertanyaan, pilihan A–D, kunci jawaban, dan pembahasan.</p>
+              <Textarea aria-label="Isi soal" value={quizJson} onChange={(event) => setQuizJson(event.target.value)}
+                className="min-h-[55vh] font-mono text-xs leading-relaxed" spellCheck={false} />
+              <Button onClick={saveQuiz} disabled={savingQuiz} className="w-full">
+                <Save /> {savingQuiz ? "Menyimpan…" : "Simpan Soal"}
+              </Button>
+            </>}
           </TabsContent>
         </Tabs>
       </div>

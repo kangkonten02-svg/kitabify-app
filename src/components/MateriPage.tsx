@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type ContentSection } from "@/lib/jilidContent";
+import { type ContentSection, type RichBab } from "@/lib/jilidContent";
 import { getMergedAlfiyahEntries, getMergedMateriData, getMergedRichContent, loadContentOverrides } from "@/lib/appContent";
 import { getUser, saveUser, addExp } from "@/lib/store";
 import { ChevronDown, BookOpen, ArrowLeft, ArrowRight, CheckCircle, Star, Bookmark, Search, X, Headphones, Lock } from "lucide-react";

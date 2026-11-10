@@ -166,9 +166,11 @@ export function getEditableMaterialRecords(): EditableMaterialRecord[] {
   const seen = new Set<string>();
   MATERI_DATA.forEach((kitab) => kitab.jilids.forEach((jilid) => jilid.babs.forEach((bab) => {
     const rich = richById.get(bab.id);
-    const payload = contentOverrides.get(bab.id) ?? rich ?? bab;
+    const override = contentOverrides.get(bab.id);
+    const payload = isRichBab(override) || isSimpleBab(override) ? override : rich ?? bab;
     const kind = isRichBab(payload) ? "rich" : "simple";
-    records.push({ id: bab.id, label: `${kitab.title} · ${jilid.title} · ${payload.title}`, kind, payload });
+    const labelTitle = isRichBab(payload) || isSimpleBab(payload) ? payload.title : bab.title;
+    records.push({ id: bab.id, label: `${kitab.title} · ${jilid.title} · ${labelTitle}`, kind, payload });
     seen.add(bab.id);
   })));
   seedRichContent.forEach((bab) => {

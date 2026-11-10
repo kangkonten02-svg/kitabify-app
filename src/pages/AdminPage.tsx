@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { computeActive, type Subscription, type SubscriptionTier } from "@/lib/subscription";
 import AdminContentEditor from "@/components/AdminContentEditor";
+import { Button } from "@/components/ui/button";
 
 interface UserRow {
   id: string;

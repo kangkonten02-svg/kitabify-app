@@ -1,7 +1,7 @@
 // Helpers for navigating between Babs across Jilids inside Amtsilati materi.
-import { MATERI_DATA } from "./materiData";
 import { ALL_AUDIO_QUIZZES } from "./audioQuizData";
-import { JILID_LIST, type NahwuJilid, type NahwuBab } from "./nahwuQuizData";
+import { type NahwuJilid, type NahwuBab } from "./nahwuQuizData";
+import { getMergedMateriData, getMergedQuizList } from "./appContent";
 
 export interface BabLocation {
   kitabId: string;
@@ -17,7 +17,7 @@ export interface FlatBab extends BabLocation {
 
 /** Flatten all babs of a kitab in display order. */
 export function flattenKitabBabs(kitabId: string): FlatBab[] {
-  const kitab = MATERI_DATA.find((k) => k.id === kitabId);
+  const kitab = getMergedMateriData().find((k) => k.id === kitabId);
   if (!kitab) return [];
   const out: FlatBab[] = [];
   for (const j of kitab.jilids) {
@@ -61,7 +61,7 @@ export function findNahwuBabByMateriId(
 ): { jilid: NahwuJilid; bab: NahwuBab } | null {
   // Strip optional "j{n}_" prefix from materi id so we match by topic suffix.
   const normalized = materiBabId.replace(/^j\d+_/, "");
-  for (const jilid of JILID_LIST) {
+  for (const jilid of getMergedQuizList()) {
     for (const bab of jilid.babs) {
       // Nahwu ids look like "j1_b1_huruf_jar" — match by ending with the materi suffix.
       if (bab.id.endsWith(`_${normalized}`) || bab.id === materiBabId) {
@@ -94,8 +94,8 @@ export function recordQuizScore(materiBabId: string, score: number) {
   // legacy modules free of new deps.
   import("./gamification").then((m) => {
     // We may not know exact kitabId/jilidId here — find it from MATERI_DATA.
-    import("./materiData").then(({ MATERI_DATA }) => {
-      for (const k of MATERI_DATA) {
+    import("./appContent").then(({ getMergedMateriData }) => {
+      for (const k of getMergedMateriData()) {
         for (const j of k.jilids) {
           for (const b of j.babs) {
             if (b.id === materiBabId) {

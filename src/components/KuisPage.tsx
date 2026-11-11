@@ -107,6 +107,7 @@ function isArabic(text: string): boolean {
 
 const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
   const [quizList, setQuizList] = useState(getMergedQuizList());
+  const [contentReady, setContentReady] = useState(false);
   const [phase, setPhase] = useState<Phase>("jilid");
   const [activeJilid, setActiveJilid] = useState<NahwuJilid | null>(null);
   const [activeBab, setActiveBab] = useState<NahwuBab | null>(null);
@@ -216,6 +217,7 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
       }
       const mergedList = getMergedQuizList();
       setQuizList(mergedList);
+      setContentReady(true);
       const pending = consumePendingQuiz();
       if (!pending) return;
       const normalized = pending.babId.replace(/^j\d+_/, "");
@@ -232,6 +234,10 @@ const KuisPage = ({ onGoMateri }: KuisPageProps = {}) => {
     void initializeContent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!contentReady) {
+    return <div className="min-h-[50vh] flex items-center justify-center text-sm text-muted-foreground">Memuat soal…</div>;
+  }
 
   const handlePick = (letter: Letter) => {
     if (showFeedback || !activeBab) return;
